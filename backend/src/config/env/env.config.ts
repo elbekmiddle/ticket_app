@@ -1,11 +1,13 @@
+import { EnvErrorMessages } from 'src/config/errors'
 import { envSchema } from './env.schema';
 
-const parsed = envSchema.parse(process.env);
+const result = envSchema.safeParse(process.env);
 
-export const env = {
-  port: parseInt(parsed.PORT, 10),
-  databaseUrl: parsed.DATABASE_URL,
-  jwtSecret: parsed.JWT_SECRET,
-  jwtRefreshSecret: parsed.JWT_REFRESH_SECRET,
-  redisUrl: parsed.REDIS_URL,
-};
+if (!result.success) {
+  console.error(EnvErrorMessages.INVALID_ENV);
+  console.error(result.error.format());
+
+  process.exit(1);
+}
+
+export const env = result.data;
