@@ -1,3 +1,5 @@
+import 'dotenv/config'
+
 import { EnvErrorMessages } from 'src/config/errors'
 import { envSchema } from './env.schema';
 
@@ -10,4 +12,4 @@ if (!result.success) {
   process.exit(1);
 }
 
-export const env = result.data;
+export const Env = result.data;
