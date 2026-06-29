@@ -4,12 +4,13 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 
 @Entity('users')
 export class User {
-@PrimaryGeneratedColumn('uuid')
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({ type: 'varchar', length: 100 })
   name!: string;
@@ -25,4 +26,10 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    nullable: true,
+  })
+  deletedAt!: Date | null;
 }
