@@ -65,8 +65,10 @@ export class AuthService{
     });
 
     return {
-      user: { id: user.id, name: user.name, email: user.email },
       ...tokens,
+      user: { id: user.id, name: user.name, email: user.email },
     };
   }
 }
+
+export class AuthModule {}

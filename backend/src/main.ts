@@ -14,7 +14,7 @@ async function bootstrap() {
     console.log(`Postgres: ${Env!.DATABASE_URL ? 'ishlayapti' : 'xato'}`)
     console.log(`Redis: ${Env!.REDIS_URL ? 'ishlayapti' : 'xato'}`)
   }
-
-  await app.listen(Env!.PORT);
-}
+    await app.listen(Env!.PORT)
+  console.log(`server ishladi: ${Env.PORT}`)
+  }
 bootstrap();
