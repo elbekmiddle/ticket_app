@@ -32,4 +32,10 @@ export class User {
     nullable: true,
   })
   deletedAt!: Date | null;
+
+  @Column({
+    name: 'is_verified',
+    default: false,
+  })
+  isVerified!: boolean
 }

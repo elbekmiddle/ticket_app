@@ -7,6 +7,7 @@ import {RegisterDto} from "../dto/register.dto"
 import { AuthErrorMessages } from 'src/config/errors'
 import { email } from 'zod'
 import { LoginDto } from 'src/modules/auth/dto/login.dto'
+import { RedisService } from 'src/redis/redis.service'
 
 @Injectable()
 export class AuthService {
