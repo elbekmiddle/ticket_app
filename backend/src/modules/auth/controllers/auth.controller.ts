@@ -22,7 +22,7 @@ export class AuthController {
     const parseResult = loginSchema.safeParse(body);
     if (!parseResult.success) {
       return new BadRequestException(parseResult.error.issues[0].message);
-    }
+    } 
     return this.authService.login(parseResult.data);
   }
 

@@ -10,8 +10,8 @@ import  {AppDataSource} from "./data-source"
 					await AppDataSource.initialize()	
 				}
 				return AppDataSource
-			}
-		}
+			},
+		},
 	],
 	exports: ['DATA_SOURCE']
 })
