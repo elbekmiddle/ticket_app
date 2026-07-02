@@ -4,7 +4,10 @@ import { DataSource } from 'typeorm';
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
-
+  extra: {
+    max: 50,
+    min: 10,
+  },
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
 
