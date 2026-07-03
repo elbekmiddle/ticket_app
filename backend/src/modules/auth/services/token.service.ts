@@ -7,29 +7,37 @@ export class TokenService {
   constructor(private readonly jwtService: JwtService) { }
 
   async generateTokens(payload: { userId: string }) {
-    console.time("access")
-
     const accessPromise = this.jwtService.signAsync(payload, {
+
       secret: Env.JWT_SECRET,
       expiresIn: "15m",
     })
-
-    console.time("refresh")
-
     const refreshPromise = this.jwtService.signAsync(payload, {
       secret: Env.JWT_REFRESH_SECRET,
       expiresIn: "7d",
     })
-
     const accessToken = await accessPromise
-    console.timeEnd("access")
-
     const refreshToken = await refreshPromise
-    console.timeEnd("refresh")
-
     return {
       accessToken,
       refreshToken,
     }
+  }
+  async generateVerificationToken(userId: string) {
+    return this.jwtService.signAsync(
+      {
+        userId,
+        type: "verify-email",
+      },
+      {
+        secret: Env.JWT_SECRET,
+        expiresIn: "10m",
+      },
+    )
+  }
+  async verifyVerificationToken(token: string) {
+    return this.jwtService.verifyAsync(token, {
+      secret: Env.JWT_SECRET,
+    })
   }
 }

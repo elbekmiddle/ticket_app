@@ -6,7 +6,8 @@ export const AuthErrorMessages = {
   TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
   INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
   NAME_TO_SHORT: 'NAME_TO_SHORT',
-  INVALID_EMAIL_FORMAT: 'INVALID_EMAIL_FORMAT'
+  INVALID_EMAIL_FORMAT: 'INVALID_EMAIL_FORMAT',
+  OTP_MUST_BE_6_DIGITS: 'OTP_MUST_BE_6_DIGITS',  
 } as const;
 
 export type AuthErrorCodeType = typeof AuthErrorMessages[keyof typeof AuthErrorMessages];

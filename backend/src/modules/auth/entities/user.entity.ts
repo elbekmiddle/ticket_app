@@ -27,15 +27,16 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    nullable: true,
-  })
-  deletedAt!: Date | null;
-
   @Column({
     name: 'is_verified',
     default: false,
   })
   isVerified!: boolean
+
+  @Column({
+    name: 'verified_at',
+    type: 'timestamp',
+    nullable: true,
+  })
+  verifiedAt!: Date | null
 }
