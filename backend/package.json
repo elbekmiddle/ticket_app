@@ -33,6 +33,7 @@
     "@types/config": "^3.3.5",
     "argon2": "^0.44.0",
     "bcrypt": "^6.0.0",
+    "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
     "ioredis": "^5.11.1",
     "nodemailer": "^9.0.3",

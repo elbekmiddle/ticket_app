@@ -10,6 +10,7 @@ import { LoginDto } from 'src/modules/auth/dto/login.dto'
 import { RedisService } from 'src/redis/redis.service'
 import { OtpService } from 'src/modules/auth/services/otp.service'
 import { EmailService } from 'src/modules/auth/services/email.service'
+import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,6 @@ export class AuthService {
 	) { }
 
 	async register(dto: RegisterDto) {
-		// 1. Check existing user
 		const existingUser = await this.dataSource.query(
 			`SELECT id FROM users WHERE email = $1 LIMIT 1`,
 			[dto.email],
@@ -157,6 +157,53 @@ export class AuthService {
 				email: user.email,
 			},
 		};
+	}
+	async verifyEmail(dto: VerifyEmailDto) {
+
+		const payload =
+			await this.tokenService.verifyVerificationToken(
+				dto.verificationToken,
+			)
+
+		const userId = payload.userId
+
+		await this.otpService.verifyOtp(
+			userId,
+			dto.otp,
+		)
+
+		await this.dataSource.query(
+			`
+    UPDATE users
+    SET is_verified = true,
+      updated_at = NOW(),
+			verified_at = NOW(),
+    WHERE id = $1
+    `,
+			[userId],
+		)
+
+		await this.otpService.deleteOtp(userId)
+
+		const tokens =
+			await this.tokenService.generateTokens({
+				userId,
+			})
+
+		const result = await this.dataSource.query(
+			`
+    SELECT id,name,email
+    FROM users
+    WHERE id=$1
+    `,
+			[userId],
+		)
+
+		return {
+			success: true,
+			...tokens,
+			user: result[0],
+		}
 	}
 }
 
