@@ -24,21 +24,28 @@ export class AuthService {
 	) { }
 
 	async register(dto: RegisterDto) {
+		console.time("register");
 		const existingUser = await this.dataSource.query(
 			`SELECT id FROM users WHERE email = $1 LIMIT 1`,
 			[dto.email],
 		)
+		console.time("check-user");
 
 		if (existingUser.length > 0) {
 			throw new ConflictException(
 				AuthErrorMessages.EMAIL_ALREADY_EXISTS,
 			)
 		}
-
+		console.timeEnd("check-user");
+		console.time("hash");
 		// 2. Hash password
 		const hashedPassword =
 			await this.cryptoService.hashPassword(dto.password)
+		console.timeEnd("hash");
 
+		
+		
+		console.time("insert");
 		// 3. Create user
 		const result = await this.dataSource.query(
 			`
@@ -57,26 +64,37 @@ export class AuthService {
     `,
 			[dto.name, dto.email, hashedPassword],
 		)
-
+		console.timeEnd("insert");
 		const user = result[0]
+		console.time("jwt");
 
-		const verificationToken =
-			await this.tokenService.generateVerificationToken(user.id)
+			const otpPromise = this.otpService.sendVerificationOtp(user.id, user.email)
 
-		
-		const otp = await this.otpService.sendVerificationOtp(
-			user.id,
-			user.email,
-		)
+			const verificationTokenPromise = this.tokenService.generateVerificationToken(user.id)
+			
+			
+			
+			console.timeEnd("jwt");
+			console.time("otp");
+			// const otp = await this.otpService.sendVerificationOtp(
+			// 	user.id,
+			// 	user.email,
+			// )
+			const [otp, verificationToken] = await Promise.all([otpPromise, verificationTokenPromise])	
+			console.timeEnd("otp");
 
 		// 6. Send email
-		await this.emailService.sendVerificationEmail(
+		console.time("email");
+		 void this.emailService.sendVerificationEmail(
 			user.email,
 			user.name,
 			otp,
-		)
+		 ).catch((err) => {
+			 console.error("Email send failed:", err)
+		 });
+		console.timeEnd("email");
 
-		// 7. Response
+		console.timeEnd("register");
 		return {
 			success: true,
 			message: "Verification code sent to email",
@@ -177,7 +195,7 @@ export class AuthService {
     UPDATE users
     SET is_verified = true,
       updated_at = NOW(),
-			verified_at = NOW(),
+			verified_at = NOW()
     WHERE id = $1
     `,
 			[userId],
