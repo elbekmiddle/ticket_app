@@ -4,7 +4,8 @@ import { registerSchema } from '../dto/register.dto';
 import { loginSchema } from '../dto/login.dto';
 import { JwtAuthGuard } from '../guards/jwt.guard';
 import { verifyEmailSchema, VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
-
+import { ResetPasswordDto, resetPasswordSchema } from 'src/modules/auth/dto/reset-password.dto'
+import { forgotPasswordSchema } from 'src/modules/auth/dto/ForgotPassword.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -40,6 +41,33 @@ export class AuthController {
     }
 
     return this.authService.verifyEmail(parse.data)
+  }
+
+    
+  @Post("forgot-password")
+  forgotPassword(@Body() body: any) {
+    const parse = forgotPasswordSchema.safeParse(body)
+
+    if (!parse.success) {
+      throw new BadRequestException(
+        parse.error.issues[0].message,
+      )
+    }
+
+    return this.authService.forgotPassword(parse.data)
+  }
+
+  @Post("reset-password")
+  resetPassword(@Body() body: any) {
+    const parse = resetPasswordSchema.safeParse(body)
+
+    if (!parse.success) {
+      throw new BadRequestException(
+        parse.error.issues[0].message,
+      )
+    }
+
+    return this.authService.resetPassword(parse.data)
   }
 
   @Get('me')

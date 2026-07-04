@@ -1,16 +1,17 @@
 import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common'
-import { User } from 'src/modules/auth/entities/user.entity'
 import { AuthCryptoService } from 'src/modules/auth/services/auth-crypto.service'
 import { TokenService } from 'src/modules/auth/services/token.service'
 import { DataSource, Repository } from 'typeorm'
 import {RegisterDto} from "../dto/register.dto"
 import { AuthErrorMessages } from 'src/config/errors'
-import { email } from 'zod'
+import { email, success } from 'zod'
 import { LoginDto } from 'src/modules/auth/dto/login.dto'
 import { RedisService } from 'src/redis/redis.service'
 import { OtpService } from 'src/modules/auth/services/otp.service'
 import { EmailService } from 'src/modules/auth/services/email.service'
 import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
+import { ForgotPasswordDto } from 'src/modules/auth/dto/ForgotPassword.dto'
+import { ResetPasswordDto } from 'src/modules/auth/dto/reset-password.dto'
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
 		private readonly tokenService: TokenService,
 		private readonly otpService: OtpService,
 		private readonly emailService: EmailService,
+		private readonly redisService: RedisService,
 	) { }
 
 	async register(dto: RegisterDto) {
@@ -221,6 +223,76 @@ export class AuthService {
 			success: true,
 			...tokens,
 			user: result[0],
+		}
+	}
+
+	async forgotPassword(dto: ForgotPasswordDto) {
+		const result = await this.dataSource.query(
+			`SELECT id, email, name FROM users WHERE email = $1 LIMIT 1`,
+			[dto.email],
+		)
+
+		const user = result[0]
+
+		if (!user) {
+			return {
+				success: true,
+				message: AuthErrorMessages.If_email_exists_OTP_sent,
+			}
+		}
+
+		const otp = await this.otpService.sendVerificationOtp(
+			user.id,
+			user.email,
+		)
+
+		await this.emailService.sendPasswordResetEmail(
+			user.email,
+			user.name,
+			otp,
+		).catch(console.error)
+
+		return {
+			success: true,
+			message: AuthErrorMessages.If_email_exists_OTP_sent,
+		}
+	}
+
+	async resetPassword(dto: ResetPasswordDto) {
+		const result = await this.dataSource.query(
+			`SELECT id FROM users WHERE email = $1 LIMIT 1`,
+			[dto.email],
+		)
+
+		const user = result[0]
+
+		if (!user) {
+			throw new UnauthorizedException(
+				AuthErrorMessages.INVALID_REQUEST,
+			)
+		}
+
+		await this.otpService.verifyOtp(user.id, dto.otp)
+
+		const hashedPassword =
+			await this.cryptoService.hashPassword(dto.newPassword)
+
+		await this.dataSource.query(
+			`
+    UPDATE users
+    SET password = $1,
+        updated_at = NOW()
+    WHERE id = $2
+    `,
+			[hashedPassword, user.id],
+		)
+
+		// cleanup OTP
+		await this.otpService.deleteOtp(user.id)
+
+		return {
+			success: true,
+			message: "Password updated successfully",
 		}
 	}
 }

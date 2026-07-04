@@ -11,6 +11,8 @@ export const AuthErrorMessages = {
   OTP_EXPIRED: 'OTP_EXPIRED',
   INVALID_OTP: 'INVALID_OTP',
   EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
+  If_email_exists_OTP_sent: 'If_email_exists_OTP_sent',
+  INVALID_REQUEST: 'INVALID_REQUEST',
 } as const;
 
 export type AuthErrorCodeType = typeof AuthErrorMessages[keyof typeof AuthErrorMessages];

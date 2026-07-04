@@ -64,4 +64,5 @@ export class OtpService {
 			this.getKey(userId),
 		)
 	}
-}
+
+	}
