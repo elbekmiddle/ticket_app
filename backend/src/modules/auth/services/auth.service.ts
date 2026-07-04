@@ -22,9 +22,8 @@ export class AuthService {
 		private readonly emailService: EmailService,
 	) { }
 
-
 	async register(dto: RegisterDto) {
-		// 1. Existing user
+		// 1. Check existing user
 		const existingUser = await this.dataSource.query(
 			`SELECT id FROM users WHERE email = $1 LIMIT 1`,
 			[dto.email],
@@ -53,43 +52,24 @@ export class AuthService {
         updated_at
       )
       VALUES
-      (
-        $1,
-        $2,
-        $3,
-        false,
-        NOW(),
-        NOW()
-      )
-      RETURNING
-        id,
-        name,
-        email,
-        is_verified
+      ($1, $2, $3, false, NOW(), NOW())
+      RETURNING id, name, email, is_verified
     `,
-			[
-				dto.name,
-				dto.email,
-				hashedPassword,
-			],
+			[dto.name, dto.email, hashedPassword],
 		)
 
 		const user = result[0]
 
-		// 4. verification token
 		const verificationToken =
-			await this.tokenService.generateVerificationToken(
-				user.id,
-			)
+			await this.tokenService.generateVerificationToken(user.id)
 
-		// 5. OTP
-		const otp =
-			await this.otpService.sendVerificationOtp(
-				user.id,
-				user.email,
-			)
+		
+		const otp = await this.otpService.sendVerificationOtp(
+			user.id,
+			user.email,
+		)
 
-		// 6. Email
+		// 6. Send email
 		await this.emailService.sendVerificationEmail(
 			user.email,
 			user.name,
@@ -99,7 +79,7 @@ export class AuthService {
 		// 7. Response
 		return {
 			success: true,
-			message: "Verification code has been sent to your email.",
+			message: "Verification code sent to email",
 			verificationToken,
 			user: {
 				id: user.id,
