@@ -11,6 +11,7 @@ import { OtpService } from 'src/modules/auth/services/otp.service'
 import { EmailService } from 'src/modules/auth/services/email.service'
 import { RedisModule } from 'src/redis/redis.module'
 import { DatabaseProvider } from 'src/database/database-provider'
+import { UserRepository } from 'src/modules/auth/repositories/user.repository'
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DatabaseProvider } from 'src/database/database-provider'
     AuthService,
     OtpService,
     EmailService,
+    UserRepository
   ],
   exports: [PassportModule, JwtStrategy], 
 })

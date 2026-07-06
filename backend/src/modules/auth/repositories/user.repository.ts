@@ -6,11 +6,30 @@ export class UserRepository {
 	constructor(
 		@Inject('DATABASE_POOL')
 		private readonly db: Pool,
-	) { }
+	) {}
 
 	async findByEmail(email: string) {
 		const { rows } = await this.db.query(
-			`SELECT * FROM users WHERE email = $1 LIMIT 1`,
+			`SELECT id, name, email, is_verified FROM users WHERE email = $1 LIMIT 1`,
+			[email],
+		)
+
+		return rows[0]
+	}
+
+	async findByEmailWithPassword(email: string) {
+		const { rows } = await this.db.query(
+			`
+			SELECT 
+				id, 
+				name, 
+				email, 
+				password, 
+				is_verified 
+			FROM users 
+			WHERE email = $1 
+			LIMIT 1
+			`,
 			[email],
 		)
 

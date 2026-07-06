@@ -11,68 +11,51 @@ import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
 import { ForgotPasswordDto } from 'src/modules/auth/dto/ForgotPassword.dto'
 import { ResetPasswordDto } from 'src/modules/auth/dto/reset-password.dto'
 import { Pool } from 'pg'
+import { UserRepository } from '../repositories/user.repository'
 
 @Injectable()
 export class AuthService {
 	constructor(
-		@Inject("DATABASE_POOL")
-		private readonly db: Pool,
 		private readonly cryptoService: AuthCryptoService,
 		private readonly tokenService: TokenService,
 		private readonly otpService: OtpService,
 		private readonly emailService: EmailService,
 		private readonly redisService: RedisService,
+		private readonly userRepository: UserRepository,
 	) { }
 
 	async register(dto: RegisterDto) {
-		const { rows: existingUsers } = await this.db.query(
-			`SELECT id FROM users WHERE email = $1 LIMIT 1`,
-			[dto.email],
-		)
+		const existingUsers = await this.userRepository.findByEmail(dto.email)
 
-		if (existingUsers.length > 0) {
+		if (existingUsers) {
 			throw new ConflictException(
 				AuthErrorMessages.EMAIL_ALREADY_EXISTS,
 			)
 		}
-		const hashedPassword =
-			await this.cryptoService.hashPassword(dto.password)
 
+		const hashedPassword = await this.cryptoService.hashPassword(dto.password)
 
-
-		const { rows } = await this.db.query(
-			`
-      INSERT INTO users
-      (
-        name,
-        email,
-        password,
-        is_verified,
-        created_at,
-        updated_at
-      )
-      VALUES
-      ($1, $2, $3, false, NOW(), NOW())
-      RETURNING id, name, email, is_verified
-    `,
-			[dto.name, dto.email, hashedPassword],
+		const user = await this.userRepository.createUser(
+			dto.name,
+			dto.email,
+			hashedPassword,
 		)
-		const user = rows[0]
 
 		const otpPromise = this.otpService.sendVerificationOtp(user.id, user.email)
+		const verificationTokenPromise =
+			this.tokenService.generateVerificationToken(user.id)
 
-		const verificationTokenPromise = this.tokenService.generateVerificationToken(user.id)
+		const [otp, verificationToken] = await Promise.all([
+			otpPromise,
+			verificationTokenPromise,
+		])
 
-
-
-		const [otp, verificationToken] = await Promise.all([otpPromise, verificationTokenPromise])
 		void this.emailService.sendVerificationEmail(
 			user.email,
 			user.name,
 			otp,
-		).catch((err) => {
-			console.error("Email send failed:", err)
-		})
+		).catch(console.error)
+
 		return {
 			success: true,
 			message: "Verification code sent to email",
@@ -86,27 +69,8 @@ export class AuthService {
 		}
 	}
 
-
 	async login(dto: LoginDto) {
-
-		const { rows } = await this.db.query(
-			`
-  SELECT
-      id,
-      name,
-      email,
-      password,
-      is_verified
-  FROM users
-  WHERE email = $1
-  LIMIT 1
-`,
-			[dto.email],
-		)
-
-
-		const user = rows[0]
-
+		const user = await this.userRepository.findByEmailWithPassword(dto.email)
 
 		if (!user) {
 			throw new UnauthorizedException(
@@ -120,11 +84,10 @@ export class AuthService {
 			)
 		}
 
-		const isPasswordMatch =
-			await this.cryptoService.comparePassword(
-				dto.password,
-				user.password,
-			)
+		const isPasswordMatch = await this.cryptoService.comparePassword(
+			dto.password,
+			user.password,
+		)
 
 		if (!isPasswordMatch) {
 			throw new UnauthorizedException(
@@ -132,10 +95,9 @@ export class AuthService {
 			)
 		}
 
-		const tokens =
-			await this.tokenService.generateTokens({
-				userId: user.id,
-			})
+		const tokens = await this.tokenService.generateTokens({
+			userId: user.id,
+		})
 
 		return {
 			success: true,
@@ -147,61 +109,35 @@ export class AuthService {
 			},
 		}
 	}
-	async verifyEmail(dto: VerifyEmailDto) {
 
-		const payload =
-			await this.tokenService.verifyVerificationToken(
-				dto.verificationToken,
-			)
+	async verifyEmail(dto: VerifyEmailDto) {
+		const payload = await this.tokenService.verifyVerificationToken(
+			dto.verificationToken,
+		)
 
 		const userId = payload.userId
 
-		await this.otpService.verifyOtp(
-			userId,
-			dto.otp,
-		)
+		await this.otpService.verifyOtp(userId, dto.otp)
 
-		await this.db.query(
-			`
-    UPDATE users
-    SET is_verified = true,
-      updated_at = NOW(),
-			verified_at = NOW()
-    WHERE id = $1
-    `,
-			[userId],
-		)
+		await this.userRepository.verifyUser(userId)
 
 		await this.otpService.deleteOtp(userId)
 
-		const tokens =
-			await this.tokenService.generateTokens({
-				userId,
-			})
+		const tokens = await this.tokenService.generateTokens({
+			userId,
+		})
 
-		const { rows } = await this.db.query(
-			`
-    SELECT id,name,email
-    FROM users
-    WHERE id=$1
-    `,
-			[userId],
-		)
+		const user = await this.userRepository.findByEmailWithPassword("") // optional
 
 		return {
 			success: true,
 			...tokens,
-			user: rows[0],
+			user,
 		}
 	}
 
 	async forgotPassword(dto: ForgotPasswordDto) {
-		const { rows } = await this.db.query(
-			`SELECT id, email, name FROM users WHERE email = $1 LIMIT 1`,
-			[dto.email],
-		)
-
-		const user = rows[0]
+		const user = await this.userRepository.findByEmail(dto.email)
 
 		if (!user) {
 			return {
@@ -228,12 +164,7 @@ export class AuthService {
 	}
 
 	async resetPassword(dto: ResetPasswordDto) {
-		const { rows } = await this.db.query(
-			`SELECT id FROM users WHERE email = $1 LIMIT 1`,
-			[dto.email],
-		)
-
-		const user = rows[0]
+		const user = await this.userRepository.findByEmail(dto.email)
 
 		if (!user) {
 			throw new UnauthorizedException(
@@ -243,20 +174,12 @@ export class AuthService {
 
 		await this.otpService.verifyOtp(user.id, dto.otp)
 
-		const hashedPassword =
-			await this.cryptoService.hashPassword(dto.newPassword)
-
-		await this.db.query(
-			`
-    UPDATE users
-    SET password = $1,
-        updated_at = NOW()
-    WHERE id = $2
-    `,
-			[hashedPassword, user.id],
+		const hashedPassword = await this.cryptoService.hashPassword(
+			dto.newPassword,
 		)
 
-		// cleanup OTP
+		await this.userRepository.updatePassword(user.id, hashedPassword)
+
 		await this.otpService.deleteOtp(user.id)
 
 		return {
