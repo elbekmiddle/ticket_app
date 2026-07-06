@@ -1,19 +1,13 @@
-import { Module } from '@nestjs/common';
-import  {AppDataSource} from "./data-source"
+import { Module } from '@nestjs/common'
+import { DatabaseProvider } from 'src/database/database-provider'
 
 @Module({
 	providers: [
-		{
-			provide: 'DATA_SOURCE',
-			useFactory: async () => {
-				if(!AppDataSource.isInitialized){
-					await AppDataSource.initialize()	
-				}
-				return AppDataSource
-			},
-		},
+		DatabaseProvider
 	],
-	exports: ['DATA_SOURCE']
+	exports: [
+		DatabaseProvider
+	]
 })
 
 export class DatabaseModule {}

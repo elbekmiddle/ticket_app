@@ -10,13 +10,14 @@ import { AuthService } from 'src/modules/auth/services/auth.service'
 import { OtpService } from 'src/modules/auth/services/otp.service'
 import { EmailService } from 'src/modules/auth/services/email.service'
 import { RedisModule } from 'src/redis/redis.module'
+import { DatabaseProvider } from 'src/database/database-provider'
 
 @Module({
   imports: [
     DatabaseModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
-    RedisModule
+    RedisModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -26,7 +27,7 @@ import { RedisModule } from 'src/redis/redis.module'
     JwtStrategy,
     AuthService,
     OtpService,
-    EmailService
+    EmailService,
   ],
   exports: [PassportModule, JwtStrategy], 
 })

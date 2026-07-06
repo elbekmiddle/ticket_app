@@ -1,16 +1,8 @@
 import 'dotenv/config';
-import { DataSource } from 'typeorm';
+import { Pool } from 'pg';
 
-export const AppDataSource = new DataSource({
-  type: 'postgres',
-  url: process.env.DATABASE_URL,
-  extra: {
-    max: 50,
-    min: 10,
-  },
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/migrations/*{.ts,.js}'],
-
-  synchronize: false,
-  logging: process.env.NODE_ENV === 'development',
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 50,
+  min: 10,
 });

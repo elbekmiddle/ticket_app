@@ -1,10 +1,8 @@
 import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { AuthCryptoService } from 'src/modules/auth/services/auth-crypto.service'
 import { TokenService } from 'src/modules/auth/services/token.service'
-import { DataSource, Repository } from 'typeorm'
-import {RegisterDto} from "../dto/register.dto"
+import { RegisterDto } from "../dto/register.dto"
 import { AuthErrorMessages } from 'src/config/errors'
-import { email, success } from 'zod'
 import { LoginDto } from 'src/modules/auth/dto/login.dto'
 import { RedisService } from 'src/redis/redis.service'
 import { OtpService } from 'src/modules/auth/services/otp.service'
@@ -12,12 +10,13 @@ import { EmailService } from 'src/modules/auth/services/email.service'
 import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
 import { ForgotPasswordDto } from 'src/modules/auth/dto/ForgotPassword.dto'
 import { ResetPasswordDto } from 'src/modules/auth/dto/reset-password.dto'
+import { Pool } from 'pg'
 
 @Injectable()
 export class AuthService {
 	constructor(
-		@Inject('DATA_SOURCE')
-		private readonly dataSource: DataSource,
+		@Inject("DATABASE_POOL")
+		private readonly db: Pool,
 		private readonly cryptoService: AuthCryptoService,
 		private readonly tokenService: TokenService,
 		private readonly otpService: OtpService,
@@ -26,30 +25,22 @@ export class AuthService {
 	) { }
 
 	async register(dto: RegisterDto) {
-		console.time("register");
-		const existingUser = await this.dataSource.query(
+		const { rows: existingUsers } = await this.db.query(
 			`SELECT id FROM users WHERE email = $1 LIMIT 1`,
 			[dto.email],
 		)
-		console.time("check-user");
 
-		if (existingUser.length > 0) {
+		if (existingUsers.length > 0) {
 			throw new ConflictException(
 				AuthErrorMessages.EMAIL_ALREADY_EXISTS,
 			)
 		}
-		console.timeEnd("check-user");
-		console.time("hash");
-		// 2. Hash password
 		const hashedPassword =
 			await this.cryptoService.hashPassword(dto.password)
-		console.timeEnd("hash");
 
-		
-		
-		console.time("insert");
-		// 3. Create user
-		const result = await this.dataSource.query(
+
+
+		const { rows } = await this.db.query(
 			`
       INSERT INTO users
       (
@@ -66,37 +57,22 @@ export class AuthService {
     `,
 			[dto.name, dto.email, hashedPassword],
 		)
-		console.timeEnd("insert");
-		const user = result[0]
-		console.time("jwt");
+		const user = rows[0]
 
-			const otpPromise = this.otpService.sendVerificationOtp(user.id, user.email)
+		const otpPromise = this.otpService.sendVerificationOtp(user.id, user.email)
 
-			const verificationTokenPromise = this.tokenService.generateVerificationToken(user.id)
-			
-			
-			
-			console.timeEnd("jwt");
-			console.time("otp");
-			// const otp = await this.otpService.sendVerificationOtp(
-			// 	user.id,
-			// 	user.email,
-			// )
-			const [otp, verificationToken] = await Promise.all([otpPromise, verificationTokenPromise])	
-			console.timeEnd("otp");
+		const verificationTokenPromise = this.tokenService.generateVerificationToken(user.id)
 
-		// 6. Send email
-		console.time("email");
-		 void this.emailService.sendVerificationEmail(
+
+
+		const [otp, verificationToken] = await Promise.all([otpPromise, verificationTokenPromise])
+		void this.emailService.sendVerificationEmail(
 			user.email,
 			user.name,
 			otp,
-		 ).catch((err) => {
-			 console.error("Email send failed:", err)
-		 });
-		console.timeEnd("email");
-
-		console.timeEnd("register");
+		).catch((err) => {
+			console.error("Email send failed:", err)
+		})
 		return {
 			success: true,
 			message: "Verification code sent to email",
@@ -109,14 +85,11 @@ export class AuthService {
 			},
 		}
 	}
-	
+
 
 	async login(dto: LoginDto) {
-		console.time('login-total')
 
-		console.time('db')
-		
-		const result = await this.dataSource.query(
+		const { rows } = await this.db.query(
 			`
   SELECT
       id,
@@ -129,11 +102,10 @@ export class AuthService {
   LIMIT 1
 `,
 			[dto.email],
-		);
+		)
 
-		console.timeEnd('db')
 
-		const user = result[0]
+		const user = rows[0]
 
 
 		if (!user) {
@@ -148,7 +120,6 @@ export class AuthService {
 			)
 		}
 
-		console.time('verify')
 		const isPasswordMatch =
 			await this.cryptoService.comparePassword(
 				dto.password,
@@ -160,9 +131,7 @@ export class AuthService {
 				AuthErrorMessages.INVALID_CREDENTIALS,
 			)
 		}
-		console.timeEnd('verify')
 
-		console.time('jwt')
 		const tokens =
 			await this.tokenService.generateTokens({
 				userId: user.id,
@@ -176,7 +145,7 @@ export class AuthService {
 				name: user.name,
 				email: user.email,
 			},
-		};
+		}
 	}
 	async verifyEmail(dto: VerifyEmailDto) {
 
@@ -192,7 +161,7 @@ export class AuthService {
 			dto.otp,
 		)
 
-		await this.dataSource.query(
+		await this.db.query(
 			`
     UPDATE users
     SET is_verified = true,
@@ -210,7 +179,7 @@ export class AuthService {
 				userId,
 			})
 
-		const result = await this.dataSource.query(
+		const { rows } = await this.db.query(
 			`
     SELECT id,name,email
     FROM users
@@ -222,17 +191,17 @@ export class AuthService {
 		return {
 			success: true,
 			...tokens,
-			user: result[0],
+			user: rows[0],
 		}
 	}
 
 	async forgotPassword(dto: ForgotPasswordDto) {
-		const result = await this.dataSource.query(
+		const { rows } = await this.db.query(
 			`SELECT id, email, name FROM users WHERE email = $1 LIMIT 1`,
 			[dto.email],
 		)
 
-		const user = result[0]
+		const user = rows[0]
 
 		if (!user) {
 			return {
@@ -259,12 +228,12 @@ export class AuthService {
 	}
 
 	async resetPassword(dto: ResetPasswordDto) {
-		const result = await this.dataSource.query(
+		const { rows } = await this.db.query(
 			`SELECT id FROM users WHERE email = $1 LIMIT 1`,
 			[dto.email],
 		)
 
-		const user = result[0]
+		const user = rows[0]
 
 		if (!user) {
 			throw new UnauthorizedException(
@@ -277,7 +246,7 @@ export class AuthService {
 		const hashedPassword =
 			await this.cryptoService.hashPassword(dto.newPassword)
 
-		await this.dataSource.query(
+		await this.db.query(
 			`
     UPDATE users
     SET password = $1,
@@ -297,4 +266,4 @@ export class AuthService {
 	}
 }
 
-export class AuthModule {}
+export class AuthModule { }
