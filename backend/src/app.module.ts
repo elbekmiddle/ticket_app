@@ -9,7 +9,6 @@ import { MailModule } from './mail/mail.module';
     DatabaseModule,
     AuthModule,
     RedisModule,
-    RedisModule,
     MailModule
   ],
 })
