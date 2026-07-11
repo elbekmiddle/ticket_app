@@ -20,7 +20,7 @@ export class UserRepository {
 	async findByEmailWithPassword(email: string) {
 		const { rows } = await this.db.query(
 			`
-			SELECT 
+			SELECT
 				id, 
 				name, 
 				email, 
