@@ -8,7 +8,7 @@ export const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(10, { message: EnvErrorMessages.JWT_REFRESH_SECRET_SHORT }),
   REDIS_URL: z.string().min(1, { message: EnvErrorMessages.REDIS_URL_REQUIRED }),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-	API_PREFIX: z.string().default('/api/v1'),
+  API_PREFIX: z.string().default('/api/v1'),
   SMTP_PORT: z.coerce.number().int().positive(),
   SMTP_USER: z.string().email(),
   SMTP_PASSWORD: z.string().min(8),

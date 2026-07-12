@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ticketapp-app
+    container_name: ott-streaming-app
     ports:
       - "8080:8080"
     env_file:
@@ -18,11 +18,11 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: ticketapp-postgres
+    container_name: ott-streaming-postgres
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: secret
-      POSTGRES_DB: ticket_app
+      POSTGRES_DB: ott_streaming
     ports:
       - "5432:5432"
     volumes:
@@ -31,7 +31,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: ticketapp-redis
+    container_name: ott-streaming-redis
     ports:
       - "6379:6379"
     volumes:

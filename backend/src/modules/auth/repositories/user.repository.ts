@@ -13,28 +13,22 @@ export class UserRepository {
 			`SELECT id, name, email, is_verified FROM users WHERE email = $1 LIMIT 1`,
 			[email],
 		)
-
 		return rows[0]
 	}
 
 	async findByEmailWithPassword(email: string) {
 		const { rows } = await this.db.query(
 			`
-			SELECT
-				id, 
-				name, 
-				email, 
-				password, 
-				is_verified 
-			FROM users 
-			WHERE email = $1 
+			SELECT id, name, email, password, is_verified
+			FROM users
+			WHERE email = $1
 			LIMIT 1
 			`,
 			[email],
 		)
-
 		return rows[0]
 	}
+
 	async findById(id: string) {
 		const { rows } = await this.db.query(
 			`SELECT id, name, email, is_verified FROM users WHERE id = $1 LIMIT 1`,
@@ -46,37 +40,33 @@ export class UserRepository {
 	async createUser(name: string, email: string, password: string) {
 		const { rows } = await this.db.query(
 			`
-      INSERT INTO users(name, email, password, is_verified, created_at, updated_at)
-      VALUES ($1, $2, $3, false, NOW(), NOW())
-      RETURNING id, name, email, is_verified
-      `,
+			INSERT INTO users(name, email, password, is_verified, created_at, updated_at)
+			VALUES ($1, $2, $3, false, NOW(), NOW())
+			RETURNING id, name, email, is_verified
+			`,
 			[name, email, password],
 		)
-
 		return rows[0]
 	}
 
-	async verifyUser(id: number) {
+	async verifyUser(id: string) {
 		await this.db.query(
 			`
-      UPDATE users
-      SET is_verified = true,
-          verified_at = NOW(),
-          updated_at = NOW()
-      WHERE id = $1
-      `,
+			UPDATE users
+			SET is_verified = true, verified_at = NOW(), updated_at = NOW()
+			WHERE id = $1
+			`,
 			[id],
 		)
 	}
 
-	async updatePassword(id: number, password: string) {
+	async updatePassword(id: string, password: string) {
 		await this.db.query(
 			`
-      UPDATE users
-      SET password = $1,
-          updated_at = NOW()
-      WHERE id = $2
-      `,
+			UPDATE users
+			SET password = $1, updated_at = NOW()
+			WHERE id = $2
+			`,
 			[password, id],
 		)
 	}

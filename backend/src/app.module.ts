@@ -1,18 +1,21 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/database/database.module'
 import { AuthModule } from 'src/modules/auth/auth.module'
+import { MoviesModule } from 'src/modules/movies/movies.module'
+import { SubscriptionsModule } from 'src/modules/subscriptions/subscriptions.module'
+import { TicketsModule } from 'src/modules/tickets/tickets.module'
 import { RedisModule } from './redis/redis.module';
 import { MailModule } from './mail/mail.module';
-import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
     DatabaseModule,
-    AuthModule,
     RedisModule,
     MailModule,
-    UsersModule
+    AuthModule,
+    MoviesModule,
+    SubscriptionsModule,
+    TicketsModule,
   ],
-  providers: [],
 })
 export class AppModule {}

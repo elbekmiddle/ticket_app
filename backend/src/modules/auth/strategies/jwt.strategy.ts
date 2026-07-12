@@ -14,10 +14,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: { userId: number}) {
+  async validate(payload: { userId: string }) {
     if (!payload) {
       throw new UnauthorizedException(AuthErrorMessages.INVALID_TOKEN);
     }
-    return { id: payload.userId};
+    return { id: payload.userId };
   }
 }
