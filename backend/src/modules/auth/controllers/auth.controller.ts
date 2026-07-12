@@ -10,15 +10,19 @@ import {
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { AuthService } from '../services/auth.service'
-import { registerSchema, RegisterDto } from '../dto/register.dto'
 import { JwtAuthGuard } from '../guards/jwt.guard'
 
-import { verifyEmailSchema, VerifyEmailDto } from '../dto/verify-email.dto'
-import { ResetPasswordDto, resetPasswordSchema } from '../dto/reset-password.dto'
-import { ForgotPasswordDto, forgotPasswordSchema } from '../dto/ForgotPassword.dto'
 
 import { loginSchema } from '../schemas/login.schema'
 import { LoginDto } from '../dto/login.dto'
+import { ResetPasswordDto } from 'src/modules/auth/dto/reset-password.dto'
+import { resetPasswordSchema } from 'src/modules/auth/schemas/reset-password.schema'
+import { ForgotPasswordDto } from 'src/modules/auth/dto/forgot-password.dto'
+import { forgotPasswordSchema } from 'src/modules/auth/schemas/forgot-password.schema'
+import { verifyEmailSchema } from 'src/modules/auth/schemas/verify-email.schema'
+import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
+import { registerSchema } from 'src/modules/auth/schemas/register.schema'
+import { RegisterDto } from 'src/modules/auth/dto/register.dto'
 
 
 @ApiTags('Auth')

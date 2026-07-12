@@ -1,9 +1,21 @@
-import z from 'zod'
+import { ApiProperty } from '@nestjs/swagger'
 
-export const resetPasswordSchema = z.object({
-	email: z.string().email(),
-	otp: z.string().length(6),
-	newPassword: z.string().min(6),
-})
+export class ResetPasswordDto {
 
-export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>
+	@ApiProperty({
+		example: 'user@mail.com',
+	})
+	email!: string
+
+
+	@ApiProperty({
+		example: '123456',
+	})
+	otp!: string
+
+
+	@ApiProperty({
+		example: 'newPassword123',
+	})
+	newPassword!: string
+}

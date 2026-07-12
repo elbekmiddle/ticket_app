@@ -13,6 +13,7 @@ export const AuthErrorMessages = {
   EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
   If_email_exists_OTP_sent: 'If_email_exists_OTP_sent',
   INVALID_REQUEST: 'INVALID_REQUEST',
+  NAME_REQUIRED: 'NAME_REQUIRED',
 } as const;
 
 export type AuthErrorCodeType = typeof AuthErrorMessages[keyof typeof AuthErrorMessages];
