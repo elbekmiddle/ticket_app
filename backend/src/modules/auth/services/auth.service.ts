@@ -10,7 +10,6 @@ import { EmailService } from 'src/modules/auth/services/email.service'
 import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
 import { ForgotPasswordDto } from 'src/modules/auth/dto/forgot-password.dto'
 import { ResetPasswordDto } from 'src/modules/auth/dto/reset-password.dto'
-import { Pool } from 'pg'
 import { UserRepository } from '../repositories/user.repository'
 
 @Injectable()
@@ -22,7 +21,7 @@ export class AuthService {
 		private readonly emailService: EmailService,
 		private readonly redisService: RedisService,
 		private readonly userRepository: UserRepository,
-	) { }
+	) {}
 
 	async register(dto: RegisterDto) {
 		const existingUsers = await this.userRepository.findByEmail(dto.email)
@@ -127,7 +126,8 @@ export class AuthService {
 			userId,
 		})
 
-		const user = await this.userRepository.findByEmailWithPassword("") // optional
+		// const user = await this.userRepository.findByEmailWithPassword("") 
+		const user = await this.userRepository.findById(userId)
 
 		return {
 			success: true,

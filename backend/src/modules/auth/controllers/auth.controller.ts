@@ -10,7 +10,6 @@ import {
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { AuthService } from '../services/auth.service'
-import { JwtAuthGuard } from '../guards/jwt.guard'
 
 
 import { loginSchema } from '../schemas/login.schema'
@@ -141,17 +140,17 @@ export class AuthController {
   }
 
 
-  @Get('me')
-  @ApiOperation({
-    summary: 'Get current user',
-  })
-  @UseGuards(JwtAuthGuard)
-  getProfile(
-    @Req() req: any,
-  ) {
-    return {
-      success: true,
-      user: req.user,
-    }
-  }
+  // @Get('me')
+  // @ApiOperation({
+  //   summary: 'Get current user',
+  // })
+  // @UseGuards(JwtAuthGuard)
+  // getProfile(
+  //   @Req() req: any,
+  // ) {
+  //   return {
+  //     success: true,
+  //     user: req.user,
+  //   }
+  // }
 }

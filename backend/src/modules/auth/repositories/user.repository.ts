@@ -35,6 +35,13 @@ export class UserRepository {
 
 		return rows[0]
 	}
+	async findById(id: string) {
+		const { rows } = await this.db.query(
+			`SELECT id, name, email, is_verified FROM users WHERE id = $1 LIMIT 1`,
+			[id],
+		)
+		return rows[0]
+	}
 
 	async createUser(name: string, email: string, password: string) {
 		const { rows } = await this.db.query(
