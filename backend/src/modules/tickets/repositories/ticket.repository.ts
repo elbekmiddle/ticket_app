@@ -59,4 +59,19 @@ export class TicketRepository {
 			[movieId],
 		)
 	}
+
+	// Faqat premyera kinolar uchun sotib olingan chiptalar sanaladi — tier2 shartiga
+	// mos: "kamida 3 ta premyera chiptasi". Oddiy kino chiptalari hisoblanmaydi.
+	async countPremiereTicketsByUserId(userId: string) {
+		const { rows } = await this.db.query(
+			`
+			SELECT COUNT(*)::int AS count
+			FROM tickets t
+			JOIN movies m ON m.id = t.movie_id
+			WHERE t.user_id = $1 AND m.is_premiere = true
+			`,
+			[userId],
+		)
+		return rows[0].count as number
+	}
 }

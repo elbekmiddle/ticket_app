@@ -4,6 +4,7 @@ import { Env } from 'src/config/env/env.config';
 
 interface JwtPayload {
 	userId: string
+	isAdmin?: boolean
 }
 
 interface VerifyTokenPayload extends JwtPayload {

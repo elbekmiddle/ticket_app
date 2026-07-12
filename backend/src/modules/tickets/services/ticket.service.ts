@@ -2,8 +2,14 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { TicketRepository } from '../repositories/ticket.repository'
 import { MovieRepository } from 'src/modules/movies/repositories/movie.repository'
 import { SubscriptionRepository } from 'src/modules/subscriptions/repositories/subscription.repository'
+import { UserRepository } from 'src/modules/auth/repositories/user.repository'
 import { PurchaseTicketInput } from '../schemas/purchase-ticket.schema'
 import { TicketErrorMessages } from 'src/config/errors'
+
+// Sodiq mijoz (tier 2) chegirmasi — hujjatga ko'ra 10%
+const TIER_2_DISCOUNT = 0.1
+// Nechta premyera chipta sotib olingach avtomatik tier2 beriladi
+const TIER_2_THRESHOLD = 3
 
 @Injectable()
 export class TicketService {
@@ -11,6 +17,7 @@ export class TicketService {
 		private readonly ticketRepository: TicketRepository,
 		private readonly movieRepository: MovieRepository,
 		private readonly subscriptionRepository: SubscriptionRepository,
+		private readonly userRepository: UserRepository,
 	) { }
 
 	async purchase(userId: string, dto: PurchaseTicketInput) {
@@ -26,11 +33,36 @@ export class TicketService {
 			throw new BadRequestException(TicketErrorMessages.ALREADY_PURCHASED)
 		}
 
-		// ESLATMA: bu yerga to'lov integratsiyasi (Payme/Click) qo'shiladi keyingi bosqichda —
-		// hozircha to'lov muvaffaqiyatli deb faraz qilinadi va chipta darhol yaratiladi.
+		const user = await this.userRepository.findById(userId)
+
+		// Narx faqat KO'RSATISH uchun hisoblanadi — haqiqiy pul yechish hali yo'q
+		// (ESLATMA: to'lov integratsiyasi — Payme/Click — keyingi bosqichda shu yerga qo'shiladi,
+		// hozircha to'lov muvaffaqiyatli deb faraz qilinadi va chipta darhol yaratiladi).
+		const basePrice = movie.price !== null ? Number(movie.price) : null
+		const isDiscounted = user?.tier >= 2
+		const finalPrice = basePrice !== null && isDiscounted
+			? Math.round(basePrice * (1 - TIER_2_DISCOUNT))
+			: basePrice
+
 		const ticket = await this.ticketRepository.create(userId, dto.movieId)
 
-		return { success: true, ticket }
+		// Tier2'ga avtomatik o'tish — faqat premyera chiptalar sanaladi (init.sql'dagi
+		// biznes qoidaga mos: "kamida 3 ta premyera chiptasi sotib olgan foydalanuvchilar").
+		let tierUpgraded = false
+		if (movie.is_premiere && user && user.tier < 2) {
+			const premiereCount = await this.ticketRepository.countPremiereTicketsByUserId(userId)
+			if (premiereCount >= TIER_2_THRESHOLD) {
+				await this.userRepository.updateTier(userId, 2)
+				tierUpgraded = true
+			}
+		}
+
+		return {
+			success: true,
+			ticket,
+			pricing: { basePrice, finalPrice, discountApplied: isDiscounted },
+			tierUpgraded,
+		}
 	}
 
 	async myTickets(userId: string) {

@@ -1,13 +1,15 @@
 interface BaseEmailOptions {
-	previewText: string
-	heading: string
-	bodyHtml: string
+  previewText: string;
+  heading: string;
+  bodyHtml: string;
 }
 
-// Email klientlar (Gmail, Outlook va h.k.) ko'pincha <style> tegini o'chirib tashlaydi,
-// shuning uchun barcha CSS inline yozilgan — bu email HTML yozishning standart talabi.
-export function baseEmailTemplate({ previewText, heading, bodyHtml }: BaseEmailOptions) {
-	return `
+export function baseEmailTemplate({
+  previewText,
+  heading,
+  bodyHtml,
+}: BaseEmailOptions) {
+  return `
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -15,61 +17,183 @@ export function baseEmailTemplate({ previewText, heading, bodyHtml }: BaseEmailO
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>${heading}</title>
 </head>
-<body style="margin:0; padding:0; background-color:#0b0b0f; font-family: 'Helvetica Neue', Arial, sans-serif;">
-	<!-- Gmail/Outlook preview matni (ko'zga ko'rinmaydi, faqat inbox preview'da chiqadi) -->
-	<div style="display:none; max-height:0; overflow:hidden; opacity:0;">${previewText}</div>
 
-	<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b0b0f; padding:32px 16px;">
+<body style="
+	margin:0;
+	padding:0;
+	background-color:#f6f7fb;
+	font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+">
+
+	<!-- Preview text -->
+	<div style="
+		display:none;
+		max-height:0;
+		overflow:hidden;
+		opacity:0;
+		color:transparent;
+	">
+		${previewText}
+	</div>
+
+
+	<table 
+		role="presentation"
+		width="100%"
+		cellpadding="0"
+		cellspacing="0"
+		style="
+			background-color:#f6f7fb;
+			padding:40px 16px;
+		"
+	>
 		<tr>
 			<td align="center">
-				<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px; background-color:#15151d; border-radius:16px; overflow:hidden; border:1px solid #23232e;">
 
-					<!-- Header / Logo -->
+				<table
+					role="presentation"
+					width="100%"
+					cellpadding="0"
+					cellspacing="0"
+					style="
+						max-width:480px;
+						background:#ffffff;
+						border-radius:20px;
+						border:1px solid #e8e8ef;
+						overflow:hidden;
+					"
+				>
+
+					<!-- Header -->
 					<tr>
-						<td style="padding:32px 32px 0 32px;" align="center">
-							<div style="display:inline-block; width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#7c3aed,#db2777); text-align:center; line-height:44px; font-size:20px;">
-								🎬
+						<td
+							align="center"
+							style="
+								padding:36px 32px 24px;
+							"
+						>
+
+							<div style="
+								width:48px;
+								height:48px;
+								border-radius:14px;
+								background:#111827;
+								color:#ffffff;
+								font-size:18px;
+								font-weight:700;
+								line-height:48px;
+								text-align:center;
+								margin-bottom:16px;
+							">
+								O
 							</div>
-							<div style="margin-top:12px; color:#f4f4f5; font-size:15px; font-weight:600; letter-spacing:0.5px;">
+
+
+							<div style="
+								font-size:15px;
+								font-weight:700;
+								letter-spacing:0.8px;
+								color:#111827;
+							">
 								OTT STREAMING
 							</div>
+
 						</td>
 					</tr>
 
-					<!-- Body -->
+
+					<!-- Content -->
 					<tr>
-						<td style="padding:28px 32px 8px 32px;">
-							<h1 style="margin:0 0 16px 0; color:#ffffff; font-size:20px; font-weight:600; text-align:center;">
+						<td
+							style="
+								padding:0 32px 32px;
+							"
+						>
+
+							<h1 style="
+								margin:0 0 18px;
+								font-size:24px;
+								line-height:32px;
+								font-weight:700;
+								color:#111827;
+								text-align:center;
+							">
 								${heading}
 							</h1>
-							${bodyHtml}
+
+
+							<div style="
+								font-size:15px;
+								line-height:24px;
+								color:#4b5563;
+							">
+								${bodyHtml}
+							</div>
+
 						</td>
 					</tr>
+
+
+					<!-- Divider -->
+					<tr>
+						<td style="padding:0 32px;">
+							<div style="
+								height:1px;
+								background:#eeeeee;
+							"></div>
+						</td>
+					</tr>
+
 
 					<!-- Footer -->
 					<tr>
-						<td style="padding:24px 32px 32px 32px;">
-							<div style="border-top:1px solid #23232e; padding-top:20px; text-align:center;">
-								<p style="margin:0; color:#6b6b76; font-size:12px; line-height:18px;">
-									Bu xabarni siz OTT Streaming'da ro'yxatdan o'tganingiz yoki<br />
-									parolni tiklashni so'raganingiz uchun oldingiz.
-								</p>
-								<p style="margin:8px 0 0 0; color:#4b4b55; font-size:11px;">
-									Agar bu siz bo'lmasangiz, xabarni e'tiborsiz qoldirishingiz mumkin.
-								</p>
-							</div>
+						<td
+							align="center"
+							style="
+								padding:24px 32px 32px;
+							"
+						>
+
+							<p style="
+								margin:0;
+								font-size:12px;
+								line-height:18px;
+								color:#9ca3af;
+							">
+								Siz ushbu xabarni OTT Streaming akkauntingiz bilan bog'liq
+								amal uchun oldingiz.
+							</p>
+
+
+							<p style="
+								margin:10px 0 0;
+								font-size:12px;
+								color:#c0c4cc;
+							">
+								Agar bu amalni siz bajarmagan bo'lsangiz,
+								xabarni e'tiborsiz qoldiring.
+							</p>
+
 						</td>
 					</tr>
 
 				</table>
 
-				<p style="margin:20px 0 0 0; color:#4b4b55; font-size:11px;">
+
+				<p style="
+					margin:24px 0 0;
+					font-size:12px;
+					color:#9ca3af;
+				">
 					© ${new Date().getFullYear()} OTT Streaming
 				</p>
+
+
 			</td>
 		</tr>
 	</table>
+
 </body>
 </html>
-`.trim()
+`.trim();
 }

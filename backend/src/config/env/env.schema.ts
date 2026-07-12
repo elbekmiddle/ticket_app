@@ -11,4 +11,12 @@ export const envSchema = z.object({
   API_PREFIX: z.string().default('/api/v1'),
   RESEND_API_KEY: z.string().min(1, { message: 'RESEND_API_KEY_REQUIRED' }),
   MAIL_FROM: z.string().email(),
+
+  // AWS — ixtiyoriy. Sozlanmagan bo'lsa ilova baribir ishga tushadi,
+  // faqat /admin/media/upload-url chaqirilganda "AWS_NOT_CONFIGURED" xatosi beradi.
+  AWS_REGION: z.string().optional(),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_S3_BUCKET: z.string().optional(),
+  AWS_CLOUDFRONT_DOMAIN: z.string().optional(),
 });

@@ -15,7 +15,7 @@ function otpCodeBlock(otp: string) {
 export function verificationEmailTemplate(name: string, otp: string) {
 	const bodyHtml = `
 		<p style="margin:0 0 4px 0; color:#c4c4cc; font-size:14px; line-height:22px; text-align:center;">
-			Salom, <strong style="color:#ffffff;">${name}</strong>!
+			Salom, <strong style="color:#000;">${name}</strong>!
 		</p>
 		<p style="margin:0; color:#c4c4cc; font-size:14px; line-height:22px; text-align:center;">
 			Ro'yxatdan o'tishni yakunlash uchun quyidagi kodni kiriting:
@@ -38,7 +38,7 @@ export function verificationEmailTemplate(name: string, otp: string) {
 export function passwordResetEmailTemplate(name: string, otp: string) {
 	const bodyHtml = `
 		<p style="margin:0 0 4px 0; color:#c4c4cc; font-size:14px; line-height:22px; text-align:center;">
-			Salom, <strong style="color:#ffffff;">${name}</strong>!
+			Salom, <strong style="color:#000;">${name}</strong>!
 		</p>
 		<p style="margin:0; color:#c4c4cc; font-size:14px; line-height:22px; text-align:center;">
 			Parolni tiklash uchun so'rov yubordingiz. Quyidagi kodni kiriting:

@@ -10,7 +10,7 @@ export class UserRepository {
 
 	async findByEmail(email: string) {
 		const { rows } = await this.db.query(
-			`SELECT id, name, email, is_verified FROM users WHERE email = $1 LIMIT 1`,
+			`SELECT id, name, email, is_verified, tier, is_admin FROM users WHERE email = $1 LIMIT 1`,
 			[email],
 		)
 		return rows[0]
@@ -19,7 +19,7 @@ export class UserRepository {
 	async findByEmailWithPassword(email: string) {
 		const { rows } = await this.db.query(
 			`
-			SELECT id, name, email, password, is_verified
+			SELECT id, name, email, password, is_verified, tier, is_admin
 			FROM users
 			WHERE email = $1
 			LIMIT 1
@@ -31,7 +31,7 @@ export class UserRepository {
 
 	async findById(id: string) {
 		const { rows } = await this.db.query(
-			`SELECT id, name, email, is_verified FROM users WHERE id = $1 LIMIT 1`,
+			`SELECT id, name, email, is_verified, tier, is_admin, created_at FROM users WHERE id = $1 LIMIT 1`,
 			[id],
 		)
 		return rows[0]
@@ -42,7 +42,7 @@ export class UserRepository {
 			`
 			INSERT INTO users(name, email, password, is_verified, created_at, updated_at)
 			VALUES ($1, $2, $3, false, NOW(), NOW())
-			RETURNING id, name, email, is_verified
+			RETURNING id, name, email, is_verified, tier, is_admin
 			`,
 			[name, email, password],
 		)
@@ -69,5 +69,52 @@ export class UserRepository {
 			`,
 			[password, id],
 		)
+	}
+
+	async updateName(id: string, name: string) {
+		const { rows } = await this.db.query(
+			`
+			UPDATE users
+			SET name = $1, updated_at = NOW()
+			WHERE id = $2
+			RETURNING id, name, email, is_verified, tier, is_admin
+			`,
+			[name, id],
+		)
+		return rows[0]
+	}
+
+	// Faqat admin manual ravishda chaqiradi (VIP/tier3 belgilash) YOKI
+	// ticket.service.ts avtomatik ravishda tier1 -> tier2 ga oshirish uchun chaqiradi.
+	async updateTier(id: string, tier: number) {
+		const { rows } = await this.db.query(
+			`
+			UPDATE users
+			SET tier = $1, updated_at = NOW()
+			WHERE id = $2
+			RETURNING id, name, email, tier, is_admin
+			`,
+			[tier, id],
+		)
+		return rows[0]
+	}
+
+	async findMany(page: number, limit: number) {
+		const offset = (page - 1) * limit
+
+		const dataQuery = this.db.query(
+			`
+			SELECT id, name, email, is_verified, tier, is_admin, created_at
+			FROM users
+			ORDER BY created_at DESC
+			LIMIT $1 OFFSET $2
+			`,
+			[limit, offset],
+		)
+		const countQuery = this.db.query(`SELECT COUNT(*)::int AS total FROM users`)
+
+		const [{ rows }, { rows: countRows }] = await Promise.all([dataQuery, countQuery])
+
+		return { items: rows, total: countRows[0].total, page, limit }
 	}
 }

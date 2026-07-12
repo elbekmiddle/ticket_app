@@ -63,3 +63,36 @@ CREATE TABLE IF NOT EXISTS tickets (
 
 CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets (user_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_movie_id ON tickets (movie_id);
+
+-- ============ USER TIER / ADMIN ============
+ALTER TABLE users ADD COLUMN IF NOT EXISTS tier INT NOT NULL DEFAULT 1;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ============ REVIEWS ============
+CREATE TABLE IF NOT EXISTS reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    movie_id UUID NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+    comment TEXT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+
+    -- Bitta user bitta kinoga faqat bitta review yoza oladi
+    UNIQUE (user_id, movie_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_movie_id ON reviews (movie_id);
+
+-- ============ VIDEO PROGRESS (YouTube-style resume) ============
+-- Redis'dan har 1 daqiqada flush qilinadigan "oxirgi holat" jadvali —
+-- real-vaqtli progress Redis'da (user:progress:{userId}:{movieId}),
+-- bu jadval faqat worker qayta ishga tushganda yoki Redis TTL tugaganda
+-- fallback sifatida ishlatiladi.
+CREATE TABLE IF NOT EXISTS user_video_progress (
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    movie_id UUID NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+    last_position_seconds INT NOT NULL DEFAULT 0,
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, movie_id)
+);

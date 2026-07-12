@@ -86,12 +86,12 @@ export class AuthService {
 			throw new UnauthorizedException(AuthErrorMessages.INVALID_CREDENTIALS)
 		}
 
-		const tokens = await this.tokenService.generateTokens({ userId: user.id })
+		const tokens = await this.tokenService.generateTokens({ userId: user.id, isAdmin: user.is_admin })
 
 		return {
 			success: true,
 			...tokens,
-			user: { id: user.id, name: user.name, email: user.email },
+			user: { id: user.id, name: user.name, email: user.email, tier: user.tier, isAdmin: user.is_admin },
 		}
 	}
 

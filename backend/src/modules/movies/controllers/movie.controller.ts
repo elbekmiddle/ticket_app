@@ -7,10 +7,7 @@ import { createMovieSchema } from '../schemas/create-movie.schema'
 import { updateMovieSchema } from '../schemas/update-movie.schema'
 import { listMoviesSchema } from '../schemas/list-movies.schema'
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt.guard'
-
-// Eslatma: hozircha har qanday login qilgan foydalanuvchi kino qo'sha oladi.
-// Production'da bu yerga RolesGuard (faqat admin) qo'shish kerak bo'ladi —
-// hozirgi bosqichda role/permission tizimi hali yo'q.
+import { AdminGuard } from 'src/common/guards/admin.guard'
 
 @ApiTags('Movies')
 @Controller('movies')
@@ -20,7 +17,7 @@ export class MovieController {
 	@Post()
 	@ApiOperation({ summary: 'Create movie (admin)' })
 	@ApiBearerAuth('access-token')
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, AdminGuard)
 	async create(@Body() dto: CreateMovieDto) {
 		const parsed = createMovieSchema.safeParse(dto)
 		if (!parsed.success) {
@@ -48,7 +45,7 @@ export class MovieController {
 	@Patch(':id')
 	@ApiOperation({ summary: 'Update movie (admin)' })
 	@ApiBearerAuth('access-token')
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, AdminGuard)
 	async update(@Param('id') id: string, @Body() dto: UpdateMovieDto) {
 		const parsed = updateMovieSchema.safeParse(dto)
 		if (!parsed.success) {
@@ -60,7 +57,7 @@ export class MovieController {
 	@Delete(':id')
 	@ApiOperation({ summary: 'Delete movie (admin)' })
 	@ApiBearerAuth('access-token')
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, AdminGuard)
 	async delete(@Param('id') id: string) {
 		return this.movieService.delete(id)
 	}

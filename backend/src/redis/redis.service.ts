@@ -31,4 +31,20 @@ export class RedisService {
 	async ttl(key: string) {
 		return this.redis.ttl(key)
 	}
+
+	// `KEYS pattern` butun Redis'ni bloklaydi — production'da xavfli.
+	// SCAN esa kursor orqali bosqichma-bosqich o'qiydi, boshqa so'rovlarni bloklamaydi.
+	// Video-progress flush cron'i (har 1 daqiqada) shu metodni ishlatadi.
+	async scanKeys(pattern: string): Promise<string[]> {
+		const keys: string[] = []
+		let cursor = '0'
+
+		do {
+			const [nextCursor, batch] = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', 200)
+			cursor = nextCursor
+			keys.push(...batch)
+		} while (cursor !== '0')
+
+		return keys
+	}
 }
