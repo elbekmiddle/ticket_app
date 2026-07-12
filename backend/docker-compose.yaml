@@ -3,26 +3,37 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: ticketapp-app
     ports:
       - "8080:8080"
     env_file:
       - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
     depends_on:
       - postgres
       - redis
 
   postgres:
     image: postgres:16
+    container_name: ticketapp-postgres
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: secret
       POSTGRES_DB: ticket_app
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis:
     image: redis:7-alpine
+    container_name: ticketapp-redis
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
 
