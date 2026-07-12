@@ -48,10 +48,21 @@ bilan HTTP/queue orqali gaplashadi).
 - Spark + Dagster (tungi anti-cheat tahlil) — **alohida servis**
 - Testlar (`*.spec.ts`) — hozircha yozilmagan, keyingi commit'da qo'shiladi
 
+## Email — Resend
+
+Nodemailer/SMTP o'rniga **Resend** ishlatiladi (`src/mail/mail.service.ts`) — SMTP host/port/auth
+sozlashning hojati yo'q, faqat API key kerak:
+
+1. https://resend.com — bepul ro'yxatdan o'ting (100 email/kun, 3000/oy bepul tier yetarli)
+2. https://resend.com/api-keys — API key oling, `.env`ga `RESEND_API_KEY` sifatida qo'ying
+3. `MAIL_FROM` — agar hali domain verify qilmagan bo'lsangiz, test uchun
+   `onboarding@resend.dev` dan foydalanishingiz mumkin (Resend'ning tayyor test domeni)
+
 ## Ishga tushirish
 
 ```bash
 cp .env.example .env
+# .env ichida RESEND_API_KEY va MAIL_FROM'ni to'ldiring
 docker compose up -d postgres redis
 npm install
 npm run dev

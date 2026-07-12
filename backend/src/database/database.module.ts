@@ -10,4 +10,5 @@ import { DatabaseProvider } from 'src/database/database-provider'
 		DatabaseProvider
 	]
 })
-export class DatabaseModule { }
+
+export class DatabaseModule {}

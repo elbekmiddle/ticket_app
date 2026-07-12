@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- ============ USERS ============
 CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS idx_movies_title ON movies (title);
 -- foydalanuvchi qayta sotib olmasa avtomatik yechilmaydi.
 CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     plan VARCHAR(50) NOT NULL DEFAULT 'monthly',
     status VARCHAR(50) NOT NULL DEFAULT 'active', -- active | expired | cancelled
     expires_at TIMESTAMPTZ NOT NULL,
@@ -51,7 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_active_lookup
 -- ============ TICKETS (abadiy chipta) ============
 CREATE TABLE IF NOT EXISTS tickets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     movie_id UUID NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
     can_download BOOLEAN NOT NULL DEFAULT FALSE,
     purchased_at TIMESTAMPTZ DEFAULT NOW(),

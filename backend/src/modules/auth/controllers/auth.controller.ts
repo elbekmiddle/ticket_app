@@ -14,6 +14,8 @@ import { verifyEmailSchema } from 'src/modules/auth/schemas/verify-email.schema'
 import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
 import { registerSchema } from 'src/modules/auth/schemas/register.schema'
 import { RegisterDto } from 'src/modules/auth/dto/register.dto'
+import { ResendOtpDto } from 'src/modules/auth/dto/resend-otp.dto'
+import { resendOtpSchema } from 'src/modules/auth/schemas/resend-otp.schema'
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -52,6 +54,16 @@ export class AuthController {
 		return this.authService.verifyEmail(parse.data)
 	}
 
+	@Post('resend-otp')
+	@ApiOperation({ summary: 'Resend verification OTP (agar birinchi email kelmagan bo\'lsa)' })
+	async resendOtp(@Body() dto: ResendOtpDto) {
+		const parse = resendOtpSchema.safeParse(dto)
+		if (!parse.success) {
+			throw new BadRequestException(parse.error.issues[0].message)
+		}
+		return this.authService.resendOtp(parse.data)
+	}
+
 	@Post('forgot-password')
 	@ApiOperation({ summary: 'Send reset password OTP' })
 	async forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -73,10 +85,9 @@ export class AuthController {
 	}
 
 	@Get('me')
-	@ApiOperation({ summary: 'Get current user' })
-	@ApiBearerAuth('access-token')
 	@UseGuards(JwtAuthGuard)
-	getProfile(@Req() req: any) {
-		return { success: true, user: req.user }
+	async getProfile(@Req() req: any) {
+		const user = await this.authService.getProfile(req.user.id)
+		return { success: true, user }
 	}
 }

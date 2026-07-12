@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import { AuthCryptoService } from 'src/modules/auth/services/auth-crypto.service'
 import { TokenService } from 'src/modules/auth/services/token.service'
 import { RegisterDto } from '../dto/register.dto'
@@ -9,7 +9,14 @@ import { EmailService } from 'src/modules/auth/services/email.service'
 import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
 import { ForgotPasswordDto } from 'src/modules/auth/dto/forgot-password.dto'
 import { ResetPasswordDto } from 'src/modules/auth/dto/reset-password.dto'
+import { ResendOtpDto } from 'src/modules/auth/dto/resend-otp.dto'
 import { UserRepository } from '../repositories/user.repository'
+import { withTimeout } from 'src/common/with-timeout'
+
+// Email provayder (Resend) sekinlashsa ham, register/forgot-password/resend-otp
+// endpointlari bundan ortiq osilib qolmaydi — shundan keyin "emailSent: false"
+// deb javob qaytariladi, lekin OTP baribir Redis'da saqlangan bo'ladi.
+const EMAIL_SEND_TIMEOUT_MS = 5000
 
 @Injectable()
 export class AuthService {
@@ -37,11 +44,21 @@ export class AuthService {
 			this.tokenService.generateVerificationToken(user.id),
 		])
 
-		void this.emailService.sendVerificationEmail(user.email, user.name, otp).catch(console.error)
+		// Endi bu chaqiruv AWAIT qilinadi (fire-and-forget emas), lekin
+		// timeout bilan chegaralangan — shuning uchun response osilib qolmaydi,
+		// ammo email haqiqatan yuborilgan-yuborilmaganini frontend'ga aytib bera olamiz.
+		const emailSent = await withTimeout(
+			this.emailService.sendVerificationEmail(user.email, user.name, otp),
+			EMAIL_SEND_TIMEOUT_MS,
+			false,
+		)
 
 		return {
 			success: true,
-			message: 'Verification code sent to email',
+			message: emailSent
+				? 'Verification code sent to email'
+				: 'Account created, lekin email yuborishda muammo bo\'ldi — "Qayta yuborish" tugmasidan foydalaning',
+			emailSent,
 			verificationToken,
 			user: {
 				id: user.id,
@@ -92,19 +109,71 @@ export class AuthService {
 		return { success: true, ...tokens, user }
 	}
 
+	// Register vaqtida email yetib bormasa (yoki OTP 10 daqiqada muddati o'tsa),
+	// foydalanuvchi shu endpoint orqali yangi OTP + verification token so'rashi mumkin.
+	async resendOtp(dto: ResendOtpDto) {
+		const user = await this.userRepository.findByEmail(dto.email)
+
+		if (!user) {
+			throw new NotFoundException(AuthErrorMessages.USER_NOT_FOUND)
+		}
+
+		if (user.is_verified) {
+			return {
+				success: true,
+				alreadyVerified: true,
+				message: 'Email allaqachon tasdiqlangan, login qilishingiz mumkin',
+			}
+		}
+
+		const [otp, verificationToken] = await Promise.all([
+			this.otpService.sendVerificationOtp(user.id, user.email),
+			this.tokenService.generateVerificationToken(user.id),
+		])
+
+		const emailSent = await withTimeout(
+			this.emailService.sendVerificationEmail(user.email, user.name, otp),
+			EMAIL_SEND_TIMEOUT_MS,
+			false,
+		)
+
+		return {
+			success: true,
+			emailSent,
+			verificationToken,
+			message: emailSent
+				? 'Yangi tasdiqlash kodi yuborildi'
+				: 'Kod generatsiya qilindi, lekin email yuborishda muammo bo\'ldi — birozdan so\'ng qayta urinib ko\'ring',
+		}
+	}
+
 	async forgotPassword(dto: ForgotPasswordDto) {
 		const user = await this.userRepository.findByEmail(dto.email)
 
-		// Doim bir xil javob — user enumeration'dan himoya
+		// Doim bir xil javob — user enumeration'dan himoya.
+		// `emailSent: false` bu yerda ham, pastdagi haqiqiy xato holatida ham chiqishi
+		// mumkin — shuning uchun bu maydon "email mavjudmi"ni oshkor qilmaydi.
 		if (!user) {
-			return { success: true, message: AuthErrorMessages.If_email_exists_OTP_sent }
+			return {
+				success: true,
+				emailSent: false,
+				message: AuthErrorMessages.If_email_exists_OTP_sent,
+			}
 		}
 
 		const otp = await this.otpService.sendVerificationOtp(user.id, user.email)
 
-		void this.emailService.sendPasswordResetEmail(user.email, user.name, otp).catch(console.error)
+		const emailSent = await withTimeout(
+			this.emailService.sendPasswordResetEmail(user.email, user.name, otp),
+			EMAIL_SEND_TIMEOUT_MS,
+			false,
+		)
 
-		return { success: true, message: AuthErrorMessages.If_email_exists_OTP_sent }
+		return {
+			success: true,
+			emailSent,
+			message: AuthErrorMessages.If_email_exists_OTP_sent,
+		}
 	}
 
 	async resetPassword(dto: ResetPasswordDto) {
@@ -121,5 +190,8 @@ export class AuthService {
 		await this.otpService.deleteOtp(user.id)
 
 		return { success: true, message: 'Password updated successfully' }
+	}
+	async getProfile(userId: string) {
+		return this.userRepository.findById(userId)
 	}
 }

@@ -9,9 +9,6 @@ export const envSchema = z.object({
   REDIS_URL: z.string().min(1, { message: EnvErrorMessages.REDIS_URL_REQUIRED }),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_PREFIX: z.string().default('/api/v1'),
-  SMTP_PORT: z.coerce.number().int().positive(),
-  SMTP_USER: z.string().email(),
-  SMTP_PASSWORD: z.string().min(8),
-  SMTP_FROM: z.string().email(),
-  SMTP_HOST: z.string().min(1),
+  RESEND_API_KEY: z.string().min(1, { message: 'RESEND_API_KEY_REQUIRED' }),
+  MAIL_FROM: z.string().email(),
 });

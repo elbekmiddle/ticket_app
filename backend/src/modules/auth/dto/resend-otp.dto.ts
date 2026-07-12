@@ -1,6 +1,6 @@
-import { AuthErrorMessages } from 'src/config/errors'
-import z from 'zod'
+import { ApiProperty } from '@nestjs/swagger'
 
-export const ResendOtpSchema = z.object({
-	verificationToken: z.string(),
-})
+export class ResendOtpDto {
+	@ApiProperty({ example: 'user@mail.com' })
+	email!: string
+}
