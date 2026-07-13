@@ -38,4 +38,8 @@ export class TokenService {
 	async verifyVerificationToken(token: string): Promise<VerifyTokenPayload> {
 		return this.jwtService.verifyAsync(token, { secret: Env.JWT_SECRET })
 	}
+
+	async verifyRefreshToken(token: string): Promise<JwtPayload> {
+		return this.jwtService.verifyAsync(token, { secret: Env.JWT_REFRESH_SECRET })
+	}
 }

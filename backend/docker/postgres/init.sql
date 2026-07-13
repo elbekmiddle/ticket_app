@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS movies (
     is_premiere BOOLEAN NOT NULL DEFAULT FALSE,
     premiere_date TIMESTAMPTZ,
     price NUMERIC(12, 2),
-    poster_url TEXT,
+    poster_url TEXT,1
     video_url TEXT,
     download_unlocked_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -96,3 +96,49 @@ CREATE TABLE IF NOT EXISTS user_video_progress (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (user_id, movie_id)
 );
+
+-- ============ SOFT DELETE (users, movies, reviews) ============
+-- Qoida: hech qachon haqiqiy DELETE ishlatilmaydi (tickets/subscriptions bundan mustasno —
+-- ular allaqachon status maydoni orqali "faol emas" holatini bildiradi, deleted_at kerak emas).
+-- deleted_at NULL bo'lsa — yozuv "faol". deleted_at NOT NULL bo'lsa — "o'chirilgan" deb hisoblanadi,
+-- lekin ma'lumot bazada qoladi (audit, statistika, kelajakda tiklash uchun).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE movies ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+
+-- users.email UNIQUE ham xuddi shu muammoga duch keladi: agar user soft-delete
+-- qilinsa, o'sha email bilan qayta ro'yxatdan o'tib bo'lmay qolardi. Partial
+-- unique index'ga o'tkazamiz.
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
+	ON users (email) WHERE deleted_at IS NULL;
+
+-- reviews'dagi UNIQUE(user_id, movie_id) — agar review soft-delete qilinsa,
+-- eski (o'chirilgan) qator baribir constraint'ga tegib, userning YANGI review
+-- yozishiga to'sqinlik qilardi. Shuning uchun oddiy UNIQUE constraint'ni
+-- PARTIAL unique index'ga almashtiramiz — faqat "faol" (deleted_at IS NULL)
+-- qatorlar orasida noyoblikni talab qiladi.
+ALTER TABLE reviews DROP CONSTRAINT IF EXISTS reviews_user_id_movie_id_key;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_user_movie_active
+	ON reviews (user_id, movie_id) WHERE deleted_at IS NULL;
+
+-- "Faol yozuvlar"ni tez qidirish uchun partial index — o'chirilganlar indexga kirmaydi,
+-- shuning uchun index kichikroq va tezroq bo'ladi (eng ko'p so'rov "faol"larni qidiradi).
+CREATE INDEX IF NOT EXISTS idx_users_active ON users (id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_movies_active ON movies (id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_reviews_active ON reviews (id) WHERE deleted_at IS NULL;
+
+-- ============ MOVIES: aniq sana bilan download unlock ============
+-- download_unlocked_at endi ikki yo'l bilan belgilanishi mumkin:
+--   1) Aniq sana (movie.repository.ts'da INSERT paytida to'g'ridan-to'g'ri o'sha qiymat yoziladi)
+--   2) premiere_date + N oy (eski nisbiy hisoblash, hali ham qo'llab-quvvatlanadi)
+-- Ustunlik — aniq sanada, agar u berilgan bo'lsa.
+
+-- ============ DOWNLOAD UNLOCK CRON UCHUN FLAG ============
+-- Har cron tick'da butun movies jadvalini "download_unlocked_at <= NOW()" bo'yicha
+-- qayta-qayta skanerlamaslik uchun — bir marta qayta ishlangan kino belgilab qo'yiladi.
+ALTER TABLE movies ADD COLUMN IF NOT EXISTS downloads_unlocked BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE INDEX IF NOT EXISTS idx_movies_pending_unlock
+	ON movies (download_unlocked_at)
+	WHERE downloads_unlocked = FALSE AND deleted_at IS NULL;

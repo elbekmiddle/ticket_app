@@ -8,9 +8,12 @@ export class ReviewRepository {
 		private readonly db: Pool,
 	) { }
 
+	// deleted_at IS NULL shart — aks holda soft-deleted review "band qilingan joy"
+	// bo'lib qolib, user qayta review yoza olmay qolardi (init.sql'dagi partial
+	// unique index shu bilan mos ishlaydi).
 	async findByUserAndMovie(userId: string, movieId: string) {
 		const { rows } = await this.db.query(
-			`SELECT * FROM reviews WHERE user_id = $1 AND movie_id = $2 LIMIT 1`,
+			`SELECT * FROM reviews WHERE user_id = $1 AND movie_id = $2 AND deleted_at IS NULL LIMIT 1`,
 			[userId, movieId],
 		)
 		return rows[0]
@@ -39,7 +42,7 @@ export class ReviewRepository {
 				u.id AS user_id, u.name AS user_name, u.tier AS user_tier
 			FROM reviews r
 			JOIN users u ON u.id = r.user_id
-			WHERE r.movie_id = $1
+			WHERE r.movie_id = $1 AND r.deleted_at IS NULL
 			ORDER BY
 				r.is_pinned DESC,
 				CASE WHEN u.tier = 3 THEN 1 ELSE 0 END DESC,
@@ -51,19 +54,23 @@ export class ReviewRepository {
 	}
 
 	async findById(id: string) {
-		const { rows } = await this.db.query(`SELECT * FROM reviews WHERE id = $1 LIMIT 1`, [id])
+		const { rows } = await this.db.query(
+			`SELECT * FROM reviews WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
+			[id],
+		)
 		return rows[0]
 	}
 
 	async setPinned(id: string, isPinned: boolean) {
 		const { rows } = await this.db.query(
-			`UPDATE reviews SET is_pinned = $1 WHERE id = $2 RETURNING *`,
+			`UPDATE reviews SET is_pinned = $1 WHERE id = $2 AND deleted_at IS NULL RETURNING *`,
 			[isPinned, id],
 		)
 		return rows[0]
 	}
 
-	async delete(id: string) {
-		await this.db.query(`DELETE FROM reviews WHERE id = $1`, [id])
+	// Haqiqiy DELETE emas — deleted_at = NOW().
+	async softDelete(id: string) {
+		await this.db.query(`UPDATE reviews SET deleted_at = NOW() WHERE id = $1`, [id])
 	}
 }

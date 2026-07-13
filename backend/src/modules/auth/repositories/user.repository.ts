@@ -8,9 +8,11 @@ export class UserRepository {
 		private readonly db: Pool,
 	) {}
 
+	// Barcha "find" metodlari deleted_at IS NULL bilan filtrlaydi — soft-deleted
+	// user login qila olmaydi, topilmaydi, mavjud emasdek ko'rinadi (lekin qatordir DB'da qoladi).
 	async findByEmail(email: string) {
 		const { rows } = await this.db.query(
-			`SELECT id, name, email, is_verified, tier, is_admin FROM users WHERE email = $1 LIMIT 1`,
+			`SELECT id, name, email, is_verified, tier, is_admin FROM users WHERE email = $1 AND deleted_at IS NULL LIMIT 1`,
 			[email],
 		)
 		return rows[0]
@@ -21,7 +23,7 @@ export class UserRepository {
 			`
 			SELECT id, name, email, password, is_verified, tier, is_admin
 			FROM users
-			WHERE email = $1
+			WHERE email = $1 AND deleted_at IS NULL
 			LIMIT 1
 			`,
 			[email],
@@ -31,7 +33,7 @@ export class UserRepository {
 
 	async findById(id: string) {
 		const { rows } = await this.db.query(
-			`SELECT id, name, email, is_verified, tier, is_admin, created_at FROM users WHERE id = $1 LIMIT 1`,
+			`SELECT id, name, email, is_verified, tier, is_admin, created_at FROM users WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
 			[id],
 		)
 		return rows[0]
@@ -106,15 +108,27 @@ export class UserRepository {
 			`
 			SELECT id, name, email, is_verified, tier, is_admin, created_at
 			FROM users
+			WHERE deleted_at IS NULL
 			ORDER BY created_at DESC
 			LIMIT $1 OFFSET $2
 			`,
 			[limit, offset],
 		)
-		const countQuery = this.db.query(`SELECT COUNT(*)::int AS total FROM users`)
+		const countQuery = this.db.query(
+			`SELECT COUNT(*)::int AS total FROM users WHERE deleted_at IS NULL`,
+		)
 
 		const [{ rows }, { rows: countRows }] = await Promise.all([dataQuery, countQuery])
 
 		return { items: rows, total: countRows[0].total, page, limit }
+	}
+
+	// Haqiqiy DELETE emas — deleted_at = NOW(). Email boshqa user tomonidan
+	// qayta ishlatilishi mumkin bo'ladi (init.sql'dagi partial unique index tufayli).
+	async softDelete(id: string) {
+		await this.db.query(
+			`UPDATE users SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1`,
+			[id],
+		)
 	}
 }

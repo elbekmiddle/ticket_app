@@ -10,6 +10,7 @@ import { VerifyEmailDto } from 'src/modules/auth/dto/verify-email.dto'
 import { ForgotPasswordDto } from 'src/modules/auth/dto/forgot-password.dto'
 import { ResetPasswordDto } from 'src/modules/auth/dto/reset-password.dto'
 import { ResendOtpDto } from 'src/modules/auth/dto/resend-otp.dto'
+import { RefreshTokenInput } from 'src/modules/auth/schemas/refresh-token.schema'
 import { UserRepository } from '../repositories/user.repository'
 import { withTimeout } from 'src/common/with-timeout'
 
@@ -93,6 +94,33 @@ export class AuthService {
 			...tokens,
 			user: { id: user.id, name: user.name, email: user.email, tier: user.tier, isAdmin: user.is_admin },
 		}
+	}
+
+	// Refresh token — access token muddati tugagach, foydalanuvchi qayta login
+	// qilmasdan yangi access+refresh token juftligini olishi mumkin. Rotate qilamiz
+	// (eski refresh token qaytadan ishlatilmasin, yangisi chiqadi) — bu standart amaliyot,
+	// lekin eslatma: hozircha eski token "revoke" qilinmaydi (blacklist yo'q), shuning
+	// uchun eski refresh token ham muddati tugaguncha texnik jihatdan hali ishlaydi.
+	async refresh(dto: RefreshTokenInput) {
+		let payload: { userId: string; isAdmin?: boolean }
+
+		try {
+			payload = await this.tokenService.verifyRefreshToken(dto.refreshToken)
+		} catch {
+			throw new UnauthorizedException(AuthErrorMessages.INVALID_TOKEN)
+		}
+
+		// Foydalanuvchi shu orada o'chirilgan yoki admin huquqi o'zgargan bo'lishi mumkin —
+		// shuning uchun DB'dan qayta o'qiymiz, eski token'dagi payload'ga ko'r-ko'rona ishonmaymiz.
+		const user = await this.userRepository.findById(payload.userId)
+
+		if (!user) {
+			throw new UnauthorizedException(AuthErrorMessages.USER_NOT_FOUND)
+		}
+
+		const tokens = await this.tokenService.generateTokens({ userId: user.id, isAdmin: user.is_admin })
+
+		return { success: true, ...tokens }
 	}
 
 	async verifyEmail(dto: VerifyEmailDto) {

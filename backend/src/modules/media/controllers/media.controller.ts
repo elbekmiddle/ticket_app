@@ -15,8 +15,8 @@ export class MediaController {
 
 	@Post('upload-url')
 	@ApiOperation({
-		summary: 'Generate S3 presigned upload URL for a video file',
-		description: 'Admin panel bu URL\'ga browser\'dan to\'g\'ridan-to\'g\'ri PUT qiladi. Keyin qaytgan cdnUrl\'ni movie.videoUrl sifatida saqlang.',
+		summary: 'Generate S3 presigned upload URL (video yoki poster uchun)',
+		description: 'Admin panel bu URL\'ga browser\'dan to\'g\'ridan-to\'g\'ri PUT qiladi (backend orqali emas). Keyin qaytgan cdnUrl\'ni movie.videoUrl yoki posterUrl sifatida saqlang — boshqa (tashqi) URL\'lar qabul qilinmaydi.',
 	})
 	async getUploadUrl(@Body() dto: UploadUrlDto) {
 		const parsed = uploadUrlSchema.safeParse(dto)

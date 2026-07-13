@@ -66,4 +66,21 @@ export class UsersService {
 		const user = await this.userRepository.updateTier(id, dto.tier)
 		return { success: true, user }
 	}
+
+	// Soft-delete — user login qila olmay qoladi, lekin ma'lumot (tickets, reviews,
+	// subscriptions tarixi) bazada saqlanib qoladi.
+	async remove(id: string, requesterId: string) {
+		if (id === requesterId) {
+			throw new BadRequestException('CANNOT_DELETE_YOURSELF')
+		}
+
+		const existing = await this.userRepository.findById(id)
+
+		if (!existing) {
+			throw new NotFoundException('USER_NOT_FOUND')
+		}
+
+		await this.userRepository.softDelete(id)
+		return { success: true, message: 'User deleted' }
+	}
 }

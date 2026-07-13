@@ -47,7 +47,7 @@ export class MovieService {
 			throw new NotFoundException(MovieErrorMessages.MOVIE_NOT_FOUND)
 		}
 
-		await this.movieRepository.delete(id)
+		await this.movieRepository.softDelete(id)
 		return { success: true, message: 'Movie deleted' }
 	}
 }

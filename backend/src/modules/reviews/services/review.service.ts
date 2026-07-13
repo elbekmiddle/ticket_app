@@ -58,7 +58,7 @@ export class ReviewService {
 			throw new ForbiddenException('NOT_REVIEW_OWNER')
 		}
 
-		await this.reviewRepository.delete(reviewId)
+		await this.reviewRepository.softDelete(reviewId)
 		return { success: true, message: 'Review deleted' }
 	}
 }

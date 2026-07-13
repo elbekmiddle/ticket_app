@@ -35,7 +35,8 @@ export class MediaService {
 		}
 
 		const extension = dto.fileName.split('.').pop()
-		const key = `videos/${randomUUID()}.${extension}`
+		const prefix = dto.type === 'video' ? 'videos' : 'posters'
+		const key = `${prefix}/${randomUUID()}.${extension}`
 
 		const command = new PutObjectCommand({
 			Bucket: Env.AWS_S3_BUCKET,

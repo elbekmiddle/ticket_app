@@ -16,12 +16,15 @@ export class CreateMovieDto {
 	@ApiProperty({ example: 49000, description: 'Chipta narxi (so\'m), faqat premyera uchun', required: false })
 	price?: number
 
-	@ApiProperty({ example: 'https://cdn.example.com/posters/interstellar.jpg', required: false })
+	@ApiProperty({ example: 'https://d111111abcdef8.cloudfront.net/posters/interstellar.jpg', description: 'Faqat bizning CDN domenimizdan', required: false })
 	posterUrl?: string
 
-	@ApiProperty({ example: 'https://cdn.example.com/videos/interstellar/master.m3u8', required: false })
+	@ApiProperty({ example: 'https://d111111abcdef8.cloudfront.net/videos/interstellar/master.m3u8', description: 'Faqat bizning CDN domenimizdan', required: false })
 	videoUrl?: string
 
-	@ApiProperty({ example: 6, description: 'Nechi oydan keyin yuklab olish ochiladi (premyera uchun)', required: false })
+	@ApiProperty({ example: '2026-12-25T00:00:00Z', description: 'Aniq sana — berilsa, downloadUnlockMonths\'dan ustun turadi', required: false })
+	downloadUnlockAt?: string
+
+	@ApiProperty({ example: 6, description: 'Nisbiy: premiereDate + N oy (faqat downloadUnlockAt berilmasa ishlatiladi)', required: false })
 	downloadUnlockMonths?: number
 }

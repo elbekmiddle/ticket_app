@@ -1,5 +1,6 @@
 import { Controller, Post, Body, BadRequestException, Get, UseGuards, Req } from '@nestjs/common'
 import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 
 import { AuthService } from '../services/auth.service'
 import { JwtAuthGuard } from '../guards/jwt.guard'
@@ -16,12 +17,15 @@ import { registerSchema } from 'src/modules/auth/schemas/register.schema'
 import { RegisterDto } from 'src/modules/auth/dto/register.dto'
 import { ResendOtpDto } from 'src/modules/auth/dto/resend-otp.dto'
 import { resendOtpSchema } from 'src/modules/auth/schemas/resend-otp.schema'
+import { RefreshTokenDto } from 'src/modules/auth/dto/refresh-token.dto'
+import { refreshTokenSchema } from 'src/modules/auth/schemas/refresh-token.schema'
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
 	constructor(private readonly authService: AuthService) { }
 
+	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Post('register')
 	@ApiOperation({ summary: 'Register new user' })
 	@ApiResponse({ status: 201, description: 'User registered' })
@@ -33,6 +37,7 @@ export class AuthController {
 		return this.authService.register(parseResult.data)
 	}
 
+	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Post('login')
 	@ApiOperation({ summary: 'Login user' })
 	@ApiBody({ type: LoginDto })
@@ -44,6 +49,7 @@ export class AuthController {
 		return this.authService.login(parseResult.data)
 	}
 
+	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Post('verify-email')
 	@ApiOperation({ summary: 'Verify email with OTP' })
 	async verifyEmail(@Body() dto: VerifyEmailDto) {
@@ -54,6 +60,7 @@ export class AuthController {
 		return this.authService.verifyEmail(parse.data)
 	}
 
+	@Throttle({ default: { limit: 3, ttl: 60_000 } })
 	@Post('resend-otp')
 	@ApiOperation({ summary: 'Resend verification OTP (agar birinchi email kelmagan bo\'lsa)' })
 	async resendOtp(@Body() dto: ResendOtpDto) {
@@ -64,6 +71,17 @@ export class AuthController {
 		return this.authService.resendOtp(parse.data)
 	}
 
+	@Post('refresh')
+	@ApiOperation({ summary: 'Get new access+refresh tokens using a valid refresh token' })
+	async refresh(@Body() dto: RefreshTokenDto) {
+		const parse = refreshTokenSchema.safeParse(dto)
+		if (!parse.success) {
+			throw new BadRequestException(parse.error.issues[0].message)
+		}
+		return this.authService.refresh(parse.data)
+	}
+
+	@Throttle({ default: { limit: 3, ttl: 60_000 } })
 	@Post('forgot-password')
 	@ApiOperation({ summary: 'Send reset password OTP' })
 	async forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -74,6 +92,7 @@ export class AuthController {
 		return this.authService.forgotPassword(parse.data)
 	}
 
+	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	@Post('reset-password')
 	@ApiOperation({ summary: 'Reset password' })
 	async resetPassword(@Body() dto: ResetPasswordDto) {

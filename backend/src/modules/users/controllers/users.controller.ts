@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, Req, Query, UseGuards, BadRequestException } from '@nestjs/common'
+import { Controller, Get, Patch, Delete, Param, Body, Req, Query, UseGuards, BadRequestException } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { UsersService } from '../services/users.service'
 import { UpdateProfileDto } from '../dto/update-profile.dto'
@@ -59,5 +59,12 @@ export class UsersController {
 			throw new BadRequestException(parsed.error.issues[0].message)
 		}
 		return this.usersService.updateTier(id, parsed.data)
+	}
+
+	@Delete(':id')
+	@ApiOperation({ summary: '[Admin] Soft-delete a user (data saqlanadi, faqat login qila olmaydi)' })
+	@UseGuards(AdminGuard)
+	async remove(@Req() req: any, @Param('id') id: string) {
+		return this.usersService.remove(id, req.user.id)
 	}
 }

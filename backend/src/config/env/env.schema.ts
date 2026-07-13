@@ -19,4 +19,8 @@ export const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_S3_BUCKET: z.string().optional(),
   AWS_CLOUDFRONT_DOMAIN: z.string().optional(),
+
+  // Faqat local dev uchun — production'da HECH QACHON true bo'lmasin.
+  // true bo'lsa, movie.videoUrl/posterUrl uchun domen tekshiruvi o'chadi.
+  ALLOW_EXTERNAL_MEDIA_URLS: z.coerce.boolean().default(false),
 });
