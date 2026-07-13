@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+	/* ---- OTT Streaming design tokens ---- */
+	/* Ink: asosiy fon — sof qora emas, iliqroq "kino zali" tuni */
+	--color-ink: #0e0b12;
+	/* Curtain: karta/panel foni — pardaga o'xshash to'q rang */
+	--color-curtain: #1b1420;
+	--color-curtain-light: #241b2a;
+	/* Marquee gold: asosiy urg'u — kino afishasi oltin rangi */
+	--color-gold: #d4a24e;
+	--color-gold-dim: #a17e3e;
+	/* Velvet: ikkinchi urg'u — premyera/qizil gilam */
+	--color-velvet: #8c2f39;
+	--color-velvet-light: #b23f4c;
+	/* Paper / muted: matn ranglari */
+	--color-paper: #f3ede4;
+	--color-muted: #a79b8e;
+	--color-muted-dim: #6f6459;
+	--color-border: #2e2430;
+
+	--font-display: 'Fraunces', serif;
+	--font-body: 'Inter', sans-serif;
+	--font-mono: 'IBM Plex Mono', monospace;
+}
+
+@layer base {
+	* {
+		border-color: var(--color-border);
+	}
+	html {
+		color-scheme: dark;
+	}
+	body {
+		background-color: var(--color-ink);
+		color: var(--color-paper);
+		font-family: var(--font-body);
+	}
+	::selection {
+		background-color: var(--color-gold);
+		color: var(--color-ink);
+	}
+	:focus-visible {
+		outline: 2px solid var(--color-gold);
+		outline-offset: 2px;
+	}
+}
+
+@layer components {
+	/* Ticket-stub — mahsulotning o'z "vernacular"idan olingan imzo element:
+	   abadiy chipta (permanent ticket) g'oyasini vizual qilib ko'rsatadi.
+	   Chap tomonda perforatsiya (teshiklar qatori) + uzuq chiziq. */
+	.ticket-stub {
+		position: relative;
+		background: var(--color-curtain);
+		border: 1px solid var(--color-border);
+		border-radius: 10px;
+	}
+	.ticket-stub::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 1px;
+		background-image: linear-gradient(to bottom, transparent 0, transparent 4px, var(--color-border) 4px, var(--color-border) 9px);
+		background-size: 1px 9px;
+	}
+
+	.marquee-divider {
+		height: 1px;
+		background-image: repeating-linear-gradient(to right, var(--color-gold-dim) 0, var(--color-gold-dim) 6px, transparent 6px, transparent 14px);
+		opacity: 0.5;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.hover-lift {
+			transition: transform 0.2s ease, box-shadow 0.2s ease;
+		}
+		.hover-lift:hover {
+			transform: translateY(-3px);
+			box-shadow: 0 12px 30px -10px rgba(212, 162, 78, 0.25);
+		}
+	}
+}
