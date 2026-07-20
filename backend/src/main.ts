@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { Env } from 'src/config/env/env.config'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { Logger, ValidationPipe } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap')
@@ -16,7 +16,10 @@ async function bootstrap() {
   })
 
   app.setGlobalPrefix(Env.API_PREFIX)
-  app.enableCors()
+  app.enableCors({
+    origin: Env.CORS_ORIGINS,
+    credentials: true,
+  })
   app.enableShutdownHooks()
 
   const config = new DocumentBuilder()

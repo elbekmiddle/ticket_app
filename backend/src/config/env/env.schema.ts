@@ -9,6 +9,13 @@ export const envSchema = z.object({
   REDIS_URL: z.string().min(1, { message: EnvErrorMessages.REDIS_URL_REQUIRED }),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_PREFIX: z.string().default('/api/v1'),
+
+  // Vergul bilan ajratilgan ruxsat etilgan frontend domenlari, masalan:
+  // "https://app.example.com,https://admin.example.com"
+  CORS_ORIGINS: z
+    .string()
+    .default('http://localhost:5173')
+    .transform((val) => val.split(',').map((origin) => origin.trim())),
   RESEND_API_KEY: z.string().min(1, { message: 'RESEND_API_KEY_REQUIRED' }),
   MAIL_FROM: z.string().email(),
 

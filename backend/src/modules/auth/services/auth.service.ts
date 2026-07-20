@@ -222,4 +222,9 @@ export class AuthService {
 	async getProfile(userId: string) {
 		return this.userRepository.findById(userId)
 	}
+
+	async logout(userId: string) {
+		await this.tokenService.revokeSession(userId)
+		return { success: true, message: 'Logged out' }
+	}
 }

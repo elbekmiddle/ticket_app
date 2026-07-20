@@ -32,6 +32,14 @@ export class RedisService {
 		return this.redis.ttl(key)
 	}
 
+	async incr(key: string) {
+		return this.redis.incr(key)
+	}
+
+	async expire(key: string, ttl: number) {
+		return this.redis.expire(key, ttl)
+	}
+
 	// `KEYS pattern` butun Redis'ni bloklaydi — production'da xavfli.
 	// SCAN esa kursor orqali bosqichma-bosqich o'qiydi, boshqa so'rovlarni bloklamaydi.
 	// Video-progress flush cron'i (har 1 daqiqada) shu metodni ishlatadi.

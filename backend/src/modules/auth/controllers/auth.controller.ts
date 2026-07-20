@@ -109,4 +109,12 @@ export class AuthController {
 		const user = await this.authService.getProfile(req.user.id)
 		return { success: true, user }
 	}
+
+	@Post('logout')
+	@ApiBearerAuth('access-token')
+	@UseGuards(JwtAuthGuard)
+	@ApiOperation({ summary: 'Revoke the current refresh token session' })
+	async logout(@Req() req: any) {
+		return this.authService.logout(req.user.id)
+	}
 }

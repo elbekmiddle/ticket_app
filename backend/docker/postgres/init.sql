@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS movies (
     is_premiere BOOLEAN NOT NULL DEFAULT FALSE,
     premiere_date TIMESTAMPTZ,
     price NUMERIC(12, 2),
-    poster_url TEXT,1
+    poster_url TEXT,
     video_url TEXT,
     download_unlocked_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
