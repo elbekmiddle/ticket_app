@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Film, User as UserIcon, Ticket, LogOut, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../lib/auth-context'
+import ThemeToggle from './ThemeToggle'
 
 function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
 	return (
@@ -38,6 +39,7 @@ export default function PublicLayout() {
 					</nav>
 
 					<div className="flex items-center gap-3">
+						<ThemeToggle />
 						{user ? (
 							<>
 								<Link
@@ -66,7 +68,7 @@ export default function PublicLayout() {
 								</Link>
 								<Link
 									to="/register"
-									className="flex items-center gap-1.5 rounded-full bg-gold px-4 py-1.5 text-sm font-medium text-ink hover:bg-gold-dim transition-colors"
+									className="flex items-center gap-1.5 rounded-full bg-gold px-4 py-1.5 text-sm font-medium text-on-accent hover:bg-gold-dim transition-colors"
 								>
 									<Ticket className="w-3.5 h-3.5" />
 									Ro'yxatdan o'tish

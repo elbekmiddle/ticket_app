@@ -35,7 +35,7 @@ export default function AdminDashboard() {
 
 			<Link
 				to="/admin/movies/new"
-				className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-medium text-ink hover:bg-gold-dim transition-colors"
+				className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-medium text-on-accent hover:bg-gold-dim transition-colors"
 			>
 				<Plus className="w-4 h-4" />
 				Yangi kino qo'shish

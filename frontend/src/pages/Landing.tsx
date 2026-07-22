@@ -34,7 +34,7 @@ export default function Landing() {
 						<div className="mt-8 flex flex-wrap items-center gap-3">
 							<Link
 								to="/movies"
-								className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-medium text-ink hover:bg-gold-dim transition-colors"
+								className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-medium text-on-accent hover:bg-gold-dim transition-colors"
 							>
 								<PlayCircle className="w-4 h-4" />
 								Kinolarni ko'rish

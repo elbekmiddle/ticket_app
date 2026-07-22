@@ -55,7 +55,7 @@ export default function Movies() {
 									setPage(1)
 									setFilter(f)
 								}}
-								className={`px-3.5 py-2 transition-colors ${filter === f ? 'bg-gold text-ink' : 'text-muted hover:text-paper'}`}
+								className={`px-3.5 py-2 transition-colors ${filter === f ? 'bg-gold text-on-accent' : 'text-muted hover:text-paper'}`}
 							>
 								{f === 'all' ? 'Hammasi' : 'Premyera'}
 							</button>
@@ -86,7 +86,7 @@ export default function Movies() {
 								<button
 									key={i}
 									onClick={() => setPage(i + 1)}
-									className={`w-8 h-8 rounded-full text-sm transition-colors ${page === i + 1 ? 'bg-gold text-ink' : 'text-muted hover:text-paper'}`}
+									className={`w-8 h-8 rounded-full text-sm transition-colors ${page === i + 1 ? 'bg-gold text-on-accent' : 'text-muted hover:text-paper'}`}
 								>
 									{i + 1}
 								</button>

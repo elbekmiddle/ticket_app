@@ -39,7 +39,7 @@ export function Button({
 	loading?: boolean
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 	const variants: Record<string, string> = {
-		primary: 'bg-gold text-ink hover:bg-gold-dim',
+		primary: 'bg-gold text-on-accent hover:bg-gold-dim',
 		secondary: 'bg-curtain-light text-paper border border-border hover:border-gold-dim',
 		danger: 'bg-velvet text-paper hover:bg-velvet-light',
 		ghost: 'text-muted hover:text-paper',
