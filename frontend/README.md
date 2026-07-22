@@ -64,4 +64,4 @@ npm install
 npm run dev
 ```
 
-Backend `docker compose` bilan ishga tushirilgan bo'lishi kerak (`http://localhost:8080/api/v1`).
+Backend `docker compose` bilan ishga tushirilgan bo'lishi kerak (`http://localhost:8080/api/v1`)
