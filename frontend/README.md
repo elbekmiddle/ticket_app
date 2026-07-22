@@ -65,11 +65,3 @@ npm run dev
 ```
 
 Backend `docker compose` bilan ishga tushirilgan bo'lishi kerak (`http://localhost:8080/api/v1`).
-
-## Hali qo'shilmagan / keyingi qadamlar
-
-- Bundle size ogohlantirishi bor (797KB) — `React.lazy()` bilan admin panelni
-  code-split qilish mumkin, hozircha "sodda" ko'lam uchun qoldirilmadi.
-- Toast/notification tizimi yo'q — hozircha xatolar/muvaffaqiyat xabarlar forma ichida
-  inline ko'rsatiladi.
-- E2E/component testlar yo'q.
